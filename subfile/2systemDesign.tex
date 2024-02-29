@@ -1,1 +1,103 @@
 \section{System Design}
+Partly inspired by one of our reference textbooks~\cite{book:harris}, the \ac{tlcs} \ac{fsm} is broken down into simpler interacting state machines, the process of which is called ``factoring''~\cite{book:harris}. The \acs{tlcs} \acs{fsm} design has one central state machine (Lights, Figure~\ref{fig:light_fsm}) which keeps track of the 3 light signal states $G,Y,R$, supported by 3 other state machines (Index, Primary Counter, Secondary Counter). All of these state machines are designed to update in parallel and in the same phase with each other when connected to an oscillating clock.
+\begin{figure}[H]
+	\setstretch{1}
+	\centering
+	\begin{tikzpicture}[shorten >=1.5pt, shorten <=1.5pt,node distance=4cm,on grid,auto]
+		% \draw[help lines] (0,0) grid (3,2);
+
+		\node[state with output] (G) at (90:2cm) {$G$ \nodepart{lower} \texttt{001}};
+		\node[state with output,initial]  (INIT) [above left=0.7cm and 3cm of G] {INIT \nodepart{lower} \texttt{000}};
+		\node[state with output] (Y) at (-30:2cm) {$Y$ \nodepart{lower} \texttt{010}};
+		\node[state with output] (R) at (90+2*60:2cm) {$R$ \nodepart{lower} \texttt{100}};
+
+		\path[->] (INIT) edge [bend left] node [pos=0.4] {} (G)
+		(G) edge [bend left] node [font=\footnotesize\ttfamily,align=left] {p\_timeout ||\\(s\_timeout \&\&\\!sensor[index])} (Y)
+		edge [loop above] node [font=\footnotesize\ttfamily] {default} ()
+		(Y) edge [bend left] node [font=\footnotesize\ttfamily] {p\_timeout} (R)
+		edge [out=-30,in=-60,loop] node [font=\footnotesize\ttfamily] {default} ()
+		(R) edge [bend left] node [font=\footnotesize\ttfamily] {p\_timeout} (G)
+		edge [out=-120,in=-150,loop] node [font=\footnotesize\ttfamily] {default} ();
+	\end{tikzpicture}
+	\caption{Lights \acs{fsm}.\label{fig:light_fsm}}
+	\par
+\end{figure}
+The Index \acs{fsm} (Figure~\ref{fig:index_fsm}) is used to keep track of the one traffic light in focus out of four possible options $A,B,C,D$ from each road of the cross intersection. Only one of them at any given time will reflect the state of the Lights \acs{fsm}, while all other traffic lights are to be set to red light.
+\begin{figure}[H]
+	\setstretch{1}
+	\centering
+	\begin{tikzpicture}[shorten >=1.5pt, shorten <=1.5pt,node distance=4cm,on grid,auto]
+		% \draw[help lines] (0,0) grid (3,2);
+
+		\node[state with output,initial] (A) {$A$ \nodepart{lower} \texttt{00}};
+		% \node[state with output,initial]  (INIT) [below left=0.7cm and 3cm of A] {INIT \nodepart{lower} \texttt{00}};
+		\node[state with output] (B) [right=3cm of A] {$B$ \nodepart{lower} \texttt{01}};
+		\node[state with output] (C) [below=3cm of B] {$C$ \nodepart{lower} \texttt{10}};
+		\node[state with output] (D) [below=3cm of A] {$D$ \nodepart{lower} \texttt{11}};
+
+		\path[->] (A) edge [bend left] node [font=\footnotesize\ttfamily,align=center] {p\_timeout\\$(R\rightarrow{}G)$} (B)
+		edge [out=150,in=120,loop] node [font=\footnotesize\ttfamily] {default} ()
+		(B) edge [bend left] node [font=\footnotesize\ttfamily,align=center] {p\_timeout\\$(R\rightarrow{}G)$} (C)
+		edge [out=60,in=30,loop] node [font=\footnotesize\ttfamily] {default} ()
+		(C) edge [bend left] node [font=\footnotesize\ttfamily,align=center] {p\_timeout\\$(R\rightarrow{}G)$} (D)
+		edge [out=-30,in=-60,loop] node [font=\footnotesize\ttfamily] {default} ()
+		(D) edge [bend left] node [font=\footnotesize\ttfamily,align=center] {p\_timeout\\$(R\rightarrow{}G)$} (A)
+		edge [out=-120,in=-150,loop] node [font=\footnotesize\ttfamily] {default} ();
+	\end{tikzpicture}
+	\caption{Index \acs{fsm}.\label{fig:index_fsm}}
+	\par
+\end{figure}
+The Primary Counter \acs{fsm} (Figure~\ref{fig:counterP_fsm}) a simple counter with the important purpose of counting down from the set primary timeout duration of a state. Its output provides the \texttt{p\_timeout} condition signal for the Lights and Index \acs{fsm}. Each state duration shall not ever exceed that which is set at this counter.
+\begin{figure}[H]
+	\setstretch{1}
+	\centering
+	\begin{tikzpicture}[shorten >=1.5pt, shorten <=1.5pt,node distance=4cm,on grid,auto]
+		% \draw[help lines] (0,0) grid (3,2);
+
+		\node[state with output,initial] (Sp) {$S_p$ \nodepart{lower} \texttt{0}};
+		\node[state with output] (Cp) [right=3cm of Sp] {$C_p$ \nodepart{lower} \texttt{0}};
+		\node[state with output] (Tp) [below=3cm of Cp] {$T_p$ \nodepart{lower} \texttt{1}};
+		% \node[state with output,initial]  (INIT) [below left=0.7cm and 3cm of A] {INIT \nodepart{lower} \texttt{00}};
+
+		\path[->]
+		(Sp) edge [] node [font=\footnotesize\ttfamily] {} (Cp)
+		(Cp) edge [out=60,in=30,loop] node [font=\footnotesize\ttfamily] {|current\_count} ()
+		edge [] node [font=\footnotesize\ttfamily] {\sim{}|current\_count} (Tp);
+
+		\matrix [draw,above=0.5cm,anchor=south east] at (current bounding box.north east) {
+			\node [label=right:Set] {$S_p$:};       \\
+			\node [label=right:Countdown] {$C_p$:}; \\
+			\node [label=right:Timeout] {$T_p$:};   \\
+		};
+	\end{tikzpicture}
+	\caption{counter\_p (Primary Counter) \acs{fsm}.\\Restarts at every transition between states of Lights \acs{fsm}.\label{fig:counterP_fsm}}
+	\par
+\end{figure}
+The Secondary Counter \acs{fsm} (Figure~\ref{fig:counterS_fsm}) acts as a countdown timer parallel to the Primary Counter to keep track of the time since the sensor at the specified road index has last been triggered by a car. Its output provides the \texttt{s\_timeout} condition signal for the Lights \acs{fsm}. Utilised only for the $G$ state of Lights \acs{fsm}, this counter will signal the Lights \acs{fsm} to skip to $Y$ state if the sensor has had detected no car for 5 seconds.
+\begin{figure}[H]
+	\setstretch{1}
+	\centering
+	\begin{tikzpicture}[shorten >=1.5pt, shorten <=1.5pt,node distance=4cm,on grid,auto]
+		% \draw[help lines] (0,0) grid (3,2);
+
+		\node[state with output,initial] (S) {$S_s$ \nodepart{lower} \texttt{0}};
+		\node[state with output] (C) [right=3cm of S] {$C_s$ \nodepart{lower} \texttt{0}};
+		\node[state with output] (T) [below=3cm of C] {$T_s$ \nodepart{lower} \texttt{1}};
+		% \node[state with output,initial]  (INIT) [below left=0.7cm and 3cm of A] {INIT \nodepart{lower} \texttt{00}};
+
+		\path[->]
+		(S) edge [bend left] node [font=\footnotesize\ttfamily] {!sensor[index]} (C)
+		edge [out=150,in=120,loop] node [font=\footnotesize\ttfamily] {sensor[index]} ()
+		(C) edge [bend left] node [font=\footnotesize\ttfamily] {sensor[index]} (S)
+		edge [out=60,in=30,loop] node [font=\footnotesize\ttfamily,align=left] {!sensor[index] \&\&\\|current\_count} ()
+		edge [] node [font=\footnotesize\ttfamily] {\sim{}|current\_count} (T);
+
+		\matrix [draw,above=0.5cm,anchor=south east] at (current bounding box.north east) {
+			\node [label=right:Set] {$S_s$:};       \\
+			\node [label=right:Countdown] {$C_s$:}; \\
+			\node [label=right:Timeout] {$T_s$:};   \\
+		};
+	\end{tikzpicture}
+	\caption{counter\_s (Secondary Counter) \acs{fsm}.\\Restarts only at transitions to and during $G$ state of Lights \acs{fsm}.\label{fig:counterS_fsm}}
+	\par
+\end{figure}

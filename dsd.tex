@@ -1,4 +1,5 @@
 \documentclass[12pt,a4paper]{article}
+\usepackage[base]{babel} % language
 \usepackage{subfiles}
 \usepackage{booktabs} % Table rules (\toprule \midrule \bottomrule)
 \usepackage{amsmath}
@@ -14,6 +15,7 @@
 \usepackage[skip=8pt]{parskip} % Set paragraph spacing and indent
 \usepackage{newtxtext,newtxmath} % Times Roman txt & math
 \usepackage[none]{hyphenat} % Paired with \sloppy and [none] for justify
+\usepackage[justification=centering]{caption}
 \usepackage{float} % Precise image location [H]
 % \counterwithout{section}{chapter} % Remove 0. (chapter number) from section numbering
 \counterwithin{figure}{section} % Set section-based counting
@@ -21,7 +23,7 @@
 % \makeatletter
 % \renewcommand\@seccntformat[1]{} % Use after table of contents to remove section numbering
 % \makeatother
-\usepackage[style=ieee,backend=bibtex,urldate=long]{biblatex}
+\usepackage[style=ieee,backend=biber,urldate=long]{biblatex}
 \usepackage{xpatch} % Patch website no date entry
 \xpatchbibdriver{online}
   {\printtext[parens]{\usebibmacro{date}}}
@@ -40,14 +42,21 @@
 \DTMlangsetup{showdayofmonth=false}
 \usepackage{makecell} % Force line break in table cell
 \usepackage[printonlyused,withpage]{acronym}
-\usepackage{mfirstuc}
+\usepackage{circuitikz}
+\usetikzlibrary{automata,positioning}
+\usepackage{fontspec-luatex}
+\setmonofont{inconsolata} % code font
+\usepackage{xcolor} % colored code box
+\definecolor{light-gray}{gray}{0.90}
+%\newcommand{\code}[1]{\colorbox{light-gray}{\texttt{#1}}}
+%\newcommand{\codes}[1]{\colorbox{light-gray}{\small\texttt{#1}}}
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \fancyhead{} % clear all header fields
 \renewcommand{\headrulewidth}{0pt} % no line in header area
 \fancyfoot{} % clear all footer fields
-\fancyfoot[RO,LE]{\thepage}           % page number in "outer" position of footer line
-\fancyfoot[LO,RE]{\footnotesize{}Bachelor of Information Technology (Honours) Computer Engineering\\Faculty of Information and Communication Technology (Kampar Campus), UTAR}
+\fancyfoot[R]{\thepage}           % page number in "outer" position of footer line
+\fancyfoot[L]{\footnotesize{}Bachelor of Information Technology (Honours) Computer Engineering\\Faculty of Information and Communication Technology (Kampar Campus), UTAR}
 \usepackage{lipsum}
 \newcounter{cntA}
 \newcommand\showcntA{\stepcounter{cntA}\thecntA}
@@ -106,30 +115,21 @@
 \listoftables
 \clearpage
 \section*{\centering{}LIST OF ABBREVIATIONS}
-\begin{acronym}
-	\acro{HDL}[HDL]{Hardware Description Language}
+\begin{acronym}[TLCS]\itemsep0pt
+	\acro{hdl}[HDL]{Hardware Description Language}
+	\acro{fsm}[FSM]{Finite State Machine}
+	\acro{tlcs}[TLCS]{Traffic Light Control System}
 \end{acronym}
 
 \clearpage
-\fancyhead[LO,RE]{\footnotesize\slshape\nouppercase\leftmark}
+\fancyhead[L]{\footnotesize\slshape\nouppercase\leftmark}
 %\renewcommand{\sectionmark}[1]{\markboth{#1}{}}
 \pagenumbering{arabic}
 \onehalfspacing{}
-\section{Template Test}
-\lipsum[1]
-\subsection{Subsection Test}
-\lipsum[2]
-\subsubsection{Subsubsection Test}
-\lipsum[3]
-\ac{HDL}
-\lipsum[4-6]
-\cite{book:edtf}
 \clearpage
 \subfile{subfile/1intro.tex}
-\lipsum[1-6]
 \clearpage
 \subfile{subfile/2systemDesign.tex}
-\lipsum[1-6]
 \clearpage
 \subfile{subfile/3specs.tex}
 \clearpage
