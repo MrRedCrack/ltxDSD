@@ -47,7 +47,7 @@ The Index \acs{fsm} (Figure~\ref{fig:index_fsm}) is used to keep track of the on
 	\caption{Index \acs{fsm}.\label{fig:index_fsm}}
 	\par
 \end{figure}
-The Primary Counter \acs{fsm} (Figure~\ref{fig:counterP_fsm}) a simple counter with the important purpose of counting down from the set primary timeout duration of a state. Its output provides the \texttt{p\_timeout} condition signal for the Lights and Index \acs{fsm}. Each state duration shall not ever exceed that which is set at this counter.
+The Primary Counter \acs{fsm} (Figure~\ref{fig:counterP_fsm}) is a simple counter with the important purpose of counting down from the set primary timeout duration of a state. Its output provides the \texttt{p\_timeout} condition signal for the Lights and Index \acs{fsm}. Each state duration shall not ever exceed that which is set at this counter.
 \begin{figure}[H]
 	\setstretch{1}
 	\centering
@@ -89,7 +89,7 @@ The Secondary Counter \acs{fsm} (Figure~\ref{fig:counterS_fsm}) acts as a countd
 		(S) edge [bend left] node [font=\footnotesize\ttfamily] {!sensor[index]} (C)
 		edge [out=150,in=120,loop] node [font=\footnotesize\ttfamily] {sensor[index]} ()
 		(C) edge [bend left] node [font=\footnotesize\ttfamily] {sensor[index]} (S)
-		edge [out=60,in=30,loop] node [font=\footnotesize\ttfamily,align=left] {!sensor[index] \&\&\\|current\_count} ()
+		edge [out=60,in=30,loop] node [font=\footnotesize\ttfamily,align=left] {|current\_count} ()
 		edge [] node [font=\footnotesize\ttfamily] {\sim{}|current\_count} (T);
 
 		\matrix [draw,above=0.5cm,anchor=south east] at (current bounding box.north east) {
