@@ -1,5 +1,5 @@
 \section{System Design}
-Partly inspired by one of our reference textbooks~\cite{book:harris}, the \ac{tlcs} \ac{fsm} is broken down into simpler interacting state machines, the process of which is called ``factoring''~\cite{book:harris}. The \acs{tlcs} \acs{fsm} design has one central state machine (Lights, Figure~\ref{fig:light_fsm}) which keeps track of the 3 light signal states $G,Y,R$, supported by 3 other state machines (Index, Primary Counter, Secondary Counter). All of these state machines are designed to update in parallel and in the same phase with each other when connected to an oscillating clock.
+Partly inspired by one of our reference textbooks~\cite{book:harris}, the \acs{tlcs} \ac{fsm} is broken down into simpler interacting state machines, the process of which is called ``factoring''~\cite{book:harris}. The \acs{tlcs} \acs{fsm} design has one fundamental state machine (Lights; Figure~\ref{fig:light_fsm}) which keeps track of the three light signal states $G,Y,R$, supported by seven other state machines (Index, Primary Counter, Secondary Counter, and four underused road detection counters). All of these state machines are designed to update in parallel and in the same phase with each other when connected to an oscillating clock.
 \begin{figure}[H]
 	\setstretch{1}
 	\centering
@@ -12,7 +12,7 @@ Partly inspired by one of our reference textbooks~\cite{book:harris}, the \ac{tl
 		\node[state with output] (R) at (90+2*60:2cm) {$R$ \nodepart{lower} \texttt{100}};
 
 		\path[->] (INIT) edge [bend left] node [pos=0.4] {} (G)
-		(G) edge [bend left] node [font=\footnotesize\ttfamily,align=left] {p\_timeout ||\\(s\_timeout \&\&\\!sensor[index])} (Y)
+		(G) edge [bend left] node [font=\footnotesize\ttfamily,align=left] {(p\_timeout ||\\(s\_timeout \&\&\\!sensor[index])) \&\& \\inc\_offset <= 2} (Y)
 		edge [loop above] node [font=\footnotesize\ttfamily] {default} ()
 		(Y) edge [bend left] node [font=\footnotesize\ttfamily] {p\_timeout} (R)
 		edge [out=-30,in=-60,loop] node [font=\footnotesize\ttfamily] {default} ()
@@ -22,7 +22,7 @@ Partly inspired by one of our reference textbooks~\cite{book:harris}, the \ac{tl
 	\caption{Lights \acs{fsm}.\label{fig:light_fsm}}
 	\par
 \end{figure}
-The Index \acs{fsm} (Figure~\ref{fig:index_fsm}) is used to keep track of the one traffic light in focus out of four possible options $A,B,C,D$ from each road of the cross intersection. Only one of them at any given time will reflect the state of the Lights \acs{fsm}, while all other traffic lights are to be set to red light.
+The Index \acs{fsm} (Figure~\ref{fig:index_fsm}) is used to keep track of the one traffic light in focus out of four possible options $A,B,C,D$ from each road of the cross intersection. Only one of them at any given time will reflect the state of the Lights \acs{fsm}, while all other traffic lights are to be set to red light. When no road is detected as underused, the index shall be incremented one by one, cycling through all four roads, as depicted in the figure. For the sake of avoiding visual clutter, the figure omits the depiction of all possible state skip transitions due to different possible index increment offset values (\texttt{inc\_offset}) introduced by the underused road detection feature. In such transitions, the index may skip forward two to three counts from any state, or even remain at the same value.
 \begin{figure}[H]
 	\setstretch{1}
 	\centering
@@ -44,10 +44,10 @@ The Index \acs{fsm} (Figure~\ref{fig:index_fsm}) is used to keep track of the on
 		(D) edge [bend left] node [font=\footnotesize\ttfamily,align=center] {p\_timeout\\$(R\rightarrow{}G)$} (A)
 		edge [out=-120,in=-150,loop] node [font=\footnotesize\ttfamily] {default} ();
 	\end{tikzpicture}
-	\caption{Index \acs{fsm}.\label{fig:index_fsm}}
+	\caption{Index \acs{fsm} (Simplified by omitting index skip transitions).\label{fig:index_fsm}}
 	\par
 \end{figure}
-The Primary Counter \acs{fsm} (Figure~\ref{fig:counterP_fsm}) is a simple counter with the important purpose of counting down from the set primary timeout duration of a state. Its output provides the \texttt{p\_timeout} condition signal for the Lights and Index \acs{fsm}. Each state duration shall not ever exceed that which is set at this counter.
+The Primary Counter \acs{fsm} (Figure~\ref{fig:counterP_fsm}) is a simple counter with the important purpose of counting down from the set primary timeout duration of a Light state without intervention from any special condition. Its output provides the \texttt{p\_timeout} condition signal for the Lights and Index \acs{fsm}. Each Light state duration shall not ever exceed that which is set at this counter, unless the number of dynamically closed roads leaves one or less remaining road active.
 \begin{figure}[H]
 	\setstretch{1}
 	\centering
@@ -65,15 +65,15 @@ The Primary Counter \acs{fsm} (Figure~\ref{fig:counterP_fsm}) is a simple counte
 		edge [] node [font=\footnotesize\ttfamily] {\sim{}|current\_count} (Tp);
 
 		\matrix [draw,above=0.5cm,anchor=south east] at (current bounding box.north east) {
-			\node [label=right:Set] {$S_p$:};       \\
-			\node [label=right:Countdown] {$C_p$:}; \\
-			\node [label=right:Timeout] {$T_p$:};   \\
+			\node [label=right:Set] {$S_p$};       \\
+			\node [label=right:Countdown] {$C_p$}; \\
+			\node [label=right:Timeout] {$T_p$};   \\
 		};
 	\end{tikzpicture}
-	\caption{counter\_p (Primary Counter) \acs{fsm}.\\Restarts at every transition between states of Lights \acs{fsm}.\label{fig:counterP_fsm}}
+	\caption{\texttt{counter\_p} (Primary Counter) \acs{fsm};\\restarts at every transition between states of Lights \acs{fsm}.\label{fig:counterP_fsm}}
 	\par
 \end{figure}
-The Secondary Counter \acs{fsm} (Figure~\ref{fig:counterS_fsm}) acts as a countdown timer parallel to the Primary Counter to keep track of the time since the sensor at the specified road index has last been triggered by a car. Its output provides the \texttt{s\_timeout} condition signal for the Lights \acs{fsm}. Utilised only for the $G$ state of Lights \acs{fsm}, this counter will signal the Lights \acs{fsm} to skip to $Y$ state if the sensor has had detected no car for 5 seconds.
+The Secondary Counter \acs{fsm} (Figure~\ref{fig:counterS_fsm}) acts as a countdown timer parallel to the Primary Counter to keep track of the time since the sensor at the specified road index has last been triggered by a car. Its output provides the \texttt{s\_timeout} condition signal for the Lights \acs{fsm}. Utilised only for the $G$ state of Lights \acs{fsm}, this counter will signal the Lights \acs{fsm} to skip to $Y$ state if the sensor has had detected no car for 5\unit{\second} within the green-light phase.
 \begin{figure}[H]
 	\setstretch{1}
 	\centering
@@ -89,15 +89,46 @@ The Secondary Counter \acs{fsm} (Figure~\ref{fig:counterS_fsm}) acts as a countd
 		(S) edge [bend left] node [font=\footnotesize\ttfamily] {!sensor[index]} (C)
 		edge [out=150,in=120,loop] node [font=\footnotesize\ttfamily] {sensor[index]} ()
 		(C) edge [bend left] node [font=\footnotesize\ttfamily] {sensor[index]} (S)
-		edge [out=60,in=30,loop] node [font=\footnotesize\ttfamily,align=left] {|current\_count} ()
+		edge [out=60,in=30,loop] node [font=\footnotesize\ttfamily,align=left] {|current\_count \&\&\\!sensor[index]} ()
 		edge [] node [font=\footnotesize\ttfamily] {\sim{}|current\_count} (T);
 
 		\matrix [draw,above=0.5cm,anchor=south east] at (current bounding box.north east) {
-			\node [label=right:Set] {$S_s$:};       \\
-			\node [label=right:Countdown] {$C_s$:}; \\
-			\node [label=right:Timeout] {$T_s$:};   \\
+			\node [label=right:Set] {$S_s$};       \\
+			\node [label=right:Countdown] {$C_s$}; \\
+			\node [label=right:Timeout] {$T_s$};   \\
 		};
 	\end{tikzpicture}
-	\caption{counter\_s (Secondary Counter) \acs{fsm}.\\Restarts only at transitions to and during $G$ state of Lights \acs{fsm}.\label{fig:counterS_fsm}}
+	\caption{\texttt{counter\_s} (Secondary Counter) \acs{fsm};\\restarts only at transitions to and during $G$ state of Lights \acs{fsm}.\label{fig:counterS_fsm}}
+	\par
+\end{figure}
+The underused road detection module utilises four of the same counter \acs{fsm} (Figure~\ref{fig:countersUR_fsm}) updating in parallel, one for each road. The counters are initialised at the timeout (underusage detected) state when reset and then always restarts at a 30\unit{\second} countdown whenever a sensor detects a car. The output bit of these four state machines are concatenated into a single packed array \texttt{[3:0]ur\_list}, which is processed combinationally with the current index number to calculate an index increment offset number \texttt{inc\_offset} for the next index jump.
+\begin{figure}[H]
+	\setstretch{1}
+	\centering
+	\begin{tikzpicture}[shorten >=1.5pt, shorten <=1.5pt,node distance=4cm,on grid,auto]
+		% \draw[help lines] (0,0) grid (3,2);
+
+		\node[state with output] (S) {$S_n$ \nodepart{lower} \texttt{0}};
+		\node[state with output] (C) [right=3cm of S] {$C_n$ \nodepart{lower} \texttt{0}};
+		\node[state with output,initial] (T) [below=3cm of C] {$T_n$ \nodepart{lower} \texttt{1}};
+		% \node[state with output,initial]  (INIT) [below left=0.7cm and 3cm of A] {INIT \nodepart{lower} \texttt{00}};
+
+		\path[->]
+		(S) edge [bend left] node [font=\footnotesize\ttfamily] {!sensor[index]} (C)
+		edge [out=150,in=120,loop] node [font=\footnotesize\ttfamily] {sensor[index]} ()
+		(C) edge [bend left] node [font=\footnotesize\ttfamily] {sensor[index]} (S)
+		edge [out=60,in=30,loop] node [font=\footnotesize\ttfamily,align=left] {|current\_count \&\&\\!sensor[index]} ()
+		edge [] node [font=\footnotesize\ttfamily] {\sim{}|current\_count} (T)
+		(T) edge [bend left] node [font=\footnotesize\ttfamily] {sensor[index]} (S)
+		edge [out=-30,in=-60,loop] node [font=\footnotesize\ttfamily] {!sensor[index]} ();
+
+		\matrix [draw,above=0.5cm,anchor=south east] at (current bounding box.north east) {
+		\node [label=right:Set] {$S_n$};                                     \\
+		\node [label=right:Countdown] {$C_n$};                               \\
+		\node [label=right:Timeout] {$T_n$};                                 \\
+		\node [label=right:{$[A,B,C,D]$}] {$n$}; \\
+		};
+	\end{tikzpicture}
+	\caption{Underused road detection counter \acs{fsm} structure.\label{fig:countersUR_fsm}}
 	\par
 \end{figure}

@@ -1,4 +1,90 @@
 \section{Introduction}
 \lipsum[2]
 \subsection{Design Plan}
-\lipsum[3]
+The intersection is briefly described in the assignment handout as an assumed four-way intersection in front of the West gate of Universiti Tunku Abdul Rahman. Since we are to assume an imaginary intersection with no physical detail given, and considering a four-way intersection traffic could be configured in many different ways to optimise traffic for specific real conditions, our main goal is set on designing an optimised \ac{tlcs} instead of optimising the traffic itself. In other words, there shall be no specific assumption of traffic conditions on each road or the road configurations around the intersection. The resultant \acs{tlcs} SystemVerilog base model should allow configuration tweaks using relatively little effort compared to designing another model from scratch to accommodate certain actual traffic conditions after a real-world analysis.
+\tikzset{
+	trafficlight/.style = {%
+			matrix of nodes,
+			nodes in empty cells,
+			rounded corners,
+			draw = black!80,
+			fill = black!30,
+			scale=0.5,
+			nodes = {scale=0.5,circle, minimum size=1pt, anchor=center, draw=black},
+			row 1/.style={nodes={fill=red}},
+			row 2/.style={nodes={fill=yellow}},
+			row 3/.style={nodes={fill=green}},
+			row sep=0.5mm,
+		}
+}
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}
+		\draw[double =black!50,double distance=1.5cm] (0,-4) -- (0,4)
+		(4,0) -- (-4,0);
+		\draw[white,line width=1mm, dash pattern=on .3cm off .4cm] (0,-4) -- (0,4)
+		(4,0) -- (-4,0);
+		\node (Intersection) at (0,0) [rectangle,fill=black!50,minimum height=1.5cm, minimum width=1.5cm,draw=black!50]{};
+		\node [rectangle,fill=white,minimum height=1mm, minimum width=.75cm,inner sep=0pt,yshift=.375cm,anchor=south,rotate=90] at (Intersection.west) {};
+		\node [rectangle,fill=white,minimum height=.2cm, minimum width=1mm,inner sep=0pt,anchor=south,rotate=90] at (Intersection.west) {};
+
+		\node [rectangle,fill=white,minimum height=1mm, minimum width=.75cm,inner sep=0pt,xshift=.375cm,anchor=south] at (Intersection.north) {};
+		\node [rectangle,fill=white,minimum height=.2cm, minimum width=1mm,inner sep=0pt,anchor=south] at (Intersection.north) {};
+
+		\node [rectangle,fill=white,minimum height=1mm, minimum width=.75cm,inner sep=0pt,yshift=-.375cm,anchor=south,rotate=270] at (Intersection.east) {};
+		\node [rectangle,fill=white,minimum height=.2cm, minimum width=1mm,inner sep=0pt,anchor=south,rotate=270] at (Intersection.east) {};
+
+		\node [rectangle,fill=white,minimum height=1mm, minimum width=.75cm,inner sep=0pt,xshift=-.375cm,anchor=south,rotate=180] at (Intersection.south) {};
+		\node [rectangle,fill=white,minimum height=.2cm, minimum width=1mm,inner sep=0pt,anchor=south,rotate=180] at (Intersection.south) {};
+
+		\node (senA) at (Intersection.north) [ellipse,minimum width=.4cm,minimum height = 1cm,xshift=.375cm,yshift=2mm,draw=blue!70,fill=blue!25,inner sep=0pt,anchor=south]{\footnotesize{$S_A$}};
+		\node (senB) at (Intersection.east) [ellipse,minimum width=.4cm,minimum height = 1cm,xshift=2mm,yshift=-.375cm,rotate=270,draw=blue!70,fill=blue!25,inner sep=1pt,anchor=south]{\rotatebox{-270}{\footnotesize{$S_B$}}};
+		\node (senC) at (Intersection.south) [ellipse,minimum width=.4cm,minimum height = 1cm,xshift=-.375cm,yshift=-2mm,rotate=180,draw=blue!70,fill=blue!25,inner sep=0pt,anchor=south]{\rotatebox{-180}{\footnotesize{$S_C$}}};
+		\node (senD) at (Intersection.west) [ellipse,minimum width=.4cm,minimum height = 1cm,xshift=-2mm,yshift=.375cm,rotate=90,draw=blue!70,fill=blue!25,inner sep=1pt,anchor=south]{\rotatebox{-90}{\footnotesize{$S_D$}}};
+
+		\matrix[trafficlight,label=right:$L_A$] (A) at (Intersection.north east) [anchor=south west,xshift=2mm,yshift=4mm] { \\ \\ \\};
+		\draw[line width=2pt,black] (senA.east) -- (A.west);
+		\matrix[trafficlight,label=right:$L_B$] (B) at (Intersection.south east) [anchor=north west,xshift=4mm,yshift=-2mm] { \\ \\ \\};
+		\draw[line width=2pt,black] (senB.east) -- (B.north);
+		\matrix[trafficlight,label=left:$L_C$] (C) at (Intersection.south west) [anchor=north east,xshift=-2mm,yshift=-4mm] { \\ \\ \\};
+		\draw[line width=2pt,black] (senC.east) -- (C.east);
+		\matrix[trafficlight,label=left:$L_D$] (D) at (Intersection.north west) [anchor=south east,xshift=-4mm,yshift=2mm] { \\ \\ \\};
+		\draw[line width=2pt,black] (senD.east) -- (D.south);
+
+		\draw[white,line width=1mm,arrows=-{Stealth[inset=0pt,length=0pt 3]}] (.375cm,3.2) -- node[above=1.2cm,anchor=south,black] {Road $\boldsymbol{A}$} (.375cm,2.5);
+		\draw[white,line width=1mm,arrows=-{Stealth[inset=0pt,length=0pt 3]}] (3.2,-.375cm) -- node[right=1.2cm,anchor=west,black] {Road $\boldsymbol{B}$} (2.5,-.375cm);
+		\draw[white,line width=1mm,arrows=-{Stealth[inset=0pt,length=0pt 3]}] (-.375cm,-3.2) -- node[below=1.2cm,anchor=north,black] {Road $\boldsymbol{C}$} (-.375cm,-2.5);
+		\draw[white,line width=1mm,arrows=-{Stealth[inset=0pt,length=0pt 3]}] (-3.2,.375cm) -- node[left=1.2cm,anchor=east,black] {Road $\boldsymbol{D}$} (-2.5,.375cm);
+		\draw[white,line width=1mm,arrows=-{Stealth[inset=0pt,length=0pt 3]}] (-.375cm,2.5) -- (-.375cm,3.2);
+		\draw[white,line width=1mm,arrows=-{Stealth[inset=0pt,length=0pt 3]}] (2.5,.375cm) -- (3.2,.375cm);
+		\draw[white,line width=1mm,arrows=-{Stealth[inset=0pt,length=0pt 3]}] (.375cm,-2.5) -- (.375cm,-3.2);
+		\draw[white,line width=1mm,arrows=-{Stealth[inset=0pt,length=0pt 3]}] (-2.5,-.375cm) -- (-3.2,-.375cm);
+
+		\matrix [draw,anchor=north east] at (current bounding box.north east) {
+			\node [label=right:Car sensor] {$S$};    \\
+			\node [label=right:Traffic light] {$L$}; \\
+		};
+	\end{tikzpicture}
+	\caption{Our assumed four-way intersection configuration.\label{fig:intersection}}
+	\par
+\end{figure}
+As illustrated in Figure~\ref{fig:intersection}, it is assumed there are four roads labelled $A,B,C$ and $D$ leading to an intersection, and from each road a driver can choose to head towards the opposite direction of one out of three other roads, or possibly even make a U-turn. Each road should need to have its own traffic light to control the traffic flow from that specific road, and additionally one sensor is placed at each road to detect the presence of cars in order to build a dynamic \acs{tlcs}. The sensors had been specified by the assignment handout to output TRUE if there are cars present, and FALSE if otherwise.
+
+Due to the assumption that roads in all directions are accessible from one road during its green-light phase, it is implied that throughout the green-light to red-light phase of one road, all other roads must stay in the red-light phase to avoid any possible traffic conflict.
+\subsubsection{Normal Operation}
+When all four roads are busy, the traffic lights should cycle through their phases one by one and update according to their set default (primary) durations of each light phase to keep the timings fair. The default durations for roads $A,B,C,D$ are as follows, and further expressed in (\ref{eq:normalop}):
+\begin{itemize}
+	\item Green-light phase ($G$): 30\unit{\second}
+	\item Yellow-light phase ($Y$): 3\unit{\second}
+	\item All-Red phase ($R$): 3\unit{\second}
+\end{itemize}
+\begin{align}
+	G_n\xrightarrow{30\unit{\second}}Y_n\xrightarrow{3\unit{\second}}R_n\xrightarrow{3\unit{\second}}G_{n+1}\xrightarrow{30\unit{\second}}\dots,\quad{}n:=[A,B,C,D,A,\dots] \label{eq:normalop}
+\end{align}
+\subsubsection{Low Car Density Detection}
+Within the entire green-light phase of any road, if its sensor has detected no car on that road for 5\unit{\second}, the system shall immediately skip to the yellow-light phase and continue with the normal operation phase durations until the next green-light phase.
+\begin{align}
+	G_n\xrightarrow[5\unit{\second}\text{ w/ no car}]{\text{max }30\unit{\second}}Y_n\xrightarrow{3\unit{\second}}\dots
+\end{align}
+\subsubsection{Underused Road Detection}
+At any point during system operation, if any road has had no car detected for at least 30\unit{\second} or since system initialisation, the road will be closed off during its red-light phase (then kept in red-light phase) indefinitely or until the next time a car is detected on that road. If there is only one or no road is left active with cars passing through, the last road in green-light phase will be stuck in green-light phase indefinitely or until the next time a different road is reopened with a car detection.
