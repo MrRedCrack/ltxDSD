@@ -68,6 +68,7 @@
 \renewcommand{\cftafterlottitle}{\hfill}
 \renewcommand{\cftloftitlefont}{\hfill\Large\bfseries}
 \renewcommand{\cftafterloftitle}{\hfill}
+\tocloftpagestyle{fancy}
 
 \begin{document}
 \begin{titlepage}
@@ -123,6 +124,8 @@
 \listoftables
 \clearpage
 \titleformat{\section}{\normalfont\Large\bfseries\centering}{\thesection}{1em}{}
+\phantomsection{}
+\addcontentsline{toc}{section}{LIST OF ABBREVIATIONS}
 \section*{LIST OF ABBREVIATIONS}
 \begin{acronym}[TLCS]\itemsep0pt
 	\acro{hdl}[HDL]{Hardware Description Language}
