@@ -1,0 +1,30 @@
+\newcounter{pdfpage}
+\begin{appendices}
+	\addtocontents{toc}{\protect\setlength{\cftsecnumwidth}{1.5em}}
+	\titleformat{\section}{\normalfont\Large\bfseries}{Appendix~\Alph{section}}{1em}{}
+	\section{BC846A Transistor Data Sheet}\label{app:A}
+	% \begin{minipage}[t][][b]{0.5\paperheight}
+	% 	\includepdf[
+	% 		frame,
+	% 		scale=0.75,
+	% 		pages=1,
+	% 		offset=0 0,
+	% 		pagecommand={
+	% 				\thispagestyle{plain}
+	% 				\refstepcounter{pdfpage}
+	% 				\label{BC846A-\thepdfpage}
+	% 			}
+	% 	]{appendix/BC846A.pdf}
+	% \end{minipage}
+	% \includepdf[
+	% 	frame,
+	% 	scale=0.75,
+	% 	pages=2-,
+	% 	offset=0 0,
+	% 	pagecommand={
+	% 			\thispagestyle{plain}
+	% 			\refstepcounter{pdfpage}
+	% 			\label{BC846A-\thepdfpage}
+	% 		}
+	% ]{appendix/BC846A.pdf}
+\end{appendices}

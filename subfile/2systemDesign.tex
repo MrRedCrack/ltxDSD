@@ -101,7 +101,7 @@ The Secondary Counter \acs{fsm} (Figure~\ref{fig:counterS_fsm}) acts as a countd
 	\caption{\texttt{counter\_s} (Secondary Counter) \acs{fsm};\\restarts only at transitions to and during $G$ state of Lights \acs{fsm}.\label{fig:counterS_fsm}}
 	\par
 \end{figure}
-The underused road detection module utilises four of the same counter \acs{fsm} (Figure~\ref{fig:countersUR_fsm}) updating in parallel, one for each road. The counters are initialised at the timeout (underusage detected) state when reset and then always restarts at a 30\unit{\second} countdown whenever a sensor detects a car. The output bit of these four state machines are concatenated into a single packed array \texttt{[3:0]ur\_list}, which is processed combinationally with the current index number to calculate an index increment offset number \texttt{inc\_offset} for the next index jump.
+The underused road detection module utilises four of the same counter \acs{fsm} (Figure~\ref{fig:countersUR_fsm}) updating in parallel, one for each road. The counters are initialised at the timeout (underusage detected) state when reset and then always restarts at a 30\unit{\second} countdown whenever a sensor detects a car. The output bit of these four state machines are concatenated into a single binary array \texttt{ur\_list[3:0]}, which is processed combinationally with the current index number to calculate an index increment offset number \texttt{inc\_offset} for the next index jump.
 \begin{figure}[H]
 	\setstretch{1}
 	\centering

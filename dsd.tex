@@ -35,7 +35,7 @@
 \addbibresource{ref/library.bib}
 \usepackage{siunitx} % insert SI \unit
 \usepackage{longtable} % extend table across pages
-\usepackage[title,titletoc]{appendix}
+\usepackage[title,header,titletoc]{appendix}
 \usepackage{pdfpages}
 \usepackage[breaklinks=true]{hyperref} % Link wrapping
 \usepackage[en-GB]{datetime2}
@@ -59,8 +59,15 @@
 \fancyfoot[R]{\thepage}           % page number in "outer" position of footer line
 \fancyfoot[L]{\footnotesize{}Bachelor of Information Technology (Honours) Computer Engineering\\Faculty of Information and Communication Technology (Kampar Campus), UTAR}
 \usepackage{lipsum}
+\usepackage{tocloft} % toc etc. title format
 \newcounter{cntA}
 \newcommand\showcntA{\stepcounter{cntA}\thecntA}
+\renewcommand{\cfttoctitlefont}{\hfill\Large\bfseries}
+\renewcommand{\cftaftertoctitle}{\hfill}
+\renewcommand{\cftlottitlefont}{\hfill\Large\bfseries}
+\renewcommand{\cftafterlottitle}{\hfill}
+\renewcommand{\cftloftitlefont}{\hfill\Large\bfseries}
+\renewcommand{\cftafterloftitle}{\hfill}
 
 \begin{document}
 \begin{titlepage}
@@ -102,20 +109,21 @@
 \sloppy
 \onehalfspacing{}
 \pagenumbering{roman}
-\renewcommand{\contentsname}{\centering{}TABLE OF CONTENTS}
+\renewcommand{\contentsname}{TABLE OF CONTENTS}
 \tableofcontents
 \clearpage
-\renewcommand{\listfigurename}{\centering{}LIST OF FIGURES}
+\renewcommand{\listfigurename}{LIST OF FIGURES}
 \phantomsection{}
 \addcontentsline{toc}{section}{\listfigurename}
 \listoffigures
 \clearpage
-\renewcommand{\listtablename}{\centering{}LIST OF TABLES}
+\renewcommand{\listtablename}{LIST OF TABLES}
 \phantomsection{}
 \addcontentsline{toc}{section}{\listtablename}
 \listoftables
 \clearpage
-\section*{\centering{}LIST OF ABBREVIATIONS}
+\titleformat{\section}{\normalfont\Large\bfseries\centering}{\thesection}{1em}{}
+\section*{LIST OF ABBREVIATIONS}
 \begin{acronym}[TLCS]\itemsep0pt
 	\acro{hdl}[HDL]{Hardware Description Language}
 	\acro{fsm}[FSM]{Finite State Machine}
@@ -123,7 +131,8 @@
 \end{acronym}
 
 \clearpage
-\fancyhead[L]{\footnotesize\slshape\nouppercase\leftmark}
+\fancyhead[L]{\footnotesize\textsl{\nouppercase\leftmark}}
+\titleformat{\section}{\normalfont\Large\bfseries}{\thesection}{1em}{}
 %\renewcommand{\sectionmark}[1]{\markboth{#1}{}}
 \pagenumbering{arabic}
 \onehalfspacing{}
@@ -144,12 +153,19 @@
 
 \clearpage
 \pagenumbering{Roman}
+\fancyhead{}
+\fancyhead[L]{\footnotesize\textsl{\nouppercase\rightmark}}
+\subfile{subfile/appendices.tex}
+\clearpage
+\fancyhead{}
+\fancyhead[L]{\footnotesize\textsl{\nouppercase\leftmark}}
 \begin{flushleft}
 	\phantomsection{}
 	\addcontentsline{toc}{section}{REFERENCES}
 	\singlespacing{}
 	\setlength{\bibitemsep}{\baselineskip}
-	\renewcommand{\refname}{\centering{}REFERENCES}
+	\titleformat{\section}{\normalfont\Large\bfseries\centering}{\thesection}{1em}{}
+	\renewcommand{\refname}{REFERENCES}
 	\printbibliography{}
 \end{flushleft}
 
