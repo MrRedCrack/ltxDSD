@@ -6,8 +6,8 @@ Recognizing the need for a more adaptive approach to traffic management, this pr
 The core of this assignment is the design and implementation of the traffic light controller using SystemVerilog, a hardware description language renowned for its efficiency and flexibility in modelling complex digital systems. This language facilitates a high level of abstraction in design, allowing for a comprehensive simulation and verification of the traffic light controller’s functionality before physical deployment.
 
 This report will detail the systematic approach undertaken in designing, modelling, and verifying the smart traffic light controller. It will outline the conceptual framework, the design methodology, the implementation of the controller logic in SystemVerilog, and the simulation procedures employed to validate the functionality of the system. Though a meticulous design and verification process, this assignment aims to deliver a robust solution that significantly improves traffic management at the targeted intersection, setting a precedent for future implementations in similar academic environments.
-\subsection{Design Plan}
-The intersection is briefly described in the assignment handout as an assumed four-way intersection in front of the West gate of Universiti Tunku Abdul Rahman. Since we are to assume an imaginary intersection with no physical detail given, and considering the roadways at a four-way intersection traffic could be configured in many different patterns to optimise traffic for specific real conditions, our main goal is set on designing a dynamic and versatile \ac{tlcs} model instead of optimising the traffic itself. In other words, there shall be no specific assumption of traffic conditions on each road or the road configuration around the intersection.
+\subsection{Problem Analysis}
+The intersection is briefly described in the assignment handout as an assumed four-way intersection in front of the West gate of Universiti Tunku Abdul Rahman. Since we are to assume an imaginary intersection with little physical detail given, our main goal is set on designing an unbiased but dynamic \ac{tlcs} model for a generic intersection scenario instead of biasing the traffic lights according to differentiations between major roads and side roads. There shall be no specific assumption of traffic load imbalances or the road configuration around the intersection, hence the generic scenario (Figure~\ref{fig:intersection}).
 \tikzset{
 	trafficlight/.style = {%
 			matrix of nodes,
@@ -71,12 +71,13 @@ The intersection is briefly described in the assignment handout as an assumed fo
 			\node [label=right:Traffic light] {$L$}; \\
 		};
 	\end{tikzpicture}
-	\caption{Our assumed four-way intersection configuration.\label{fig:intersection}}
+	\caption{Generic four-way intersection assumed for our assignment.\label{fig:intersection}}
 	\par
 \end{figure}
-As illustrated in Figure~\ref{fig:intersection}, it is assumed there are four roads labelled $A$, $B$, $C$, and $D$ leading to an intersection, and from each road a driver may head towards the opposite lane of any other road, or possibly even make a U-turn. So each road should need to have its own traffic light to control its traffic flow, and additionally one sensor is placed before the intersection at each road to detect the presence of cars in order to build a ``dynamic'' \acs{tlcs}. The sensors had been specified by the assignment handout to output TRUE if there are cars present, and FALSE if otherwise.
+As illustrated in Figure~\ref{fig:intersection}, it is assumed there are four roads labelled $A$, $B$, $C$, and $D$ leading to an intersection, and from each road a driver may head towards the opposite lane of any other road, or possibly even make a U-turn. So each road should need to have its own traffic light to control its traffic flow, and additionally one sensor is placed before the intersection at each road to detect the presence of cars, forming our foundation of interfaces on which to design a dynamic \ac{tlcs}. The sensors had been specified by the assignment handout to output TRUE if there are cars present, and FALSE if otherwise.
 
-Due to the assumption that opposite lanes in all directions are accessible from one road during its green-light phase, it is implied that throughout the green-light to red-light phase of one road, all other roads must stay in the red-light phase to avoid any possible traffic conflict.
+\subsection{System Behavior Design Plan\label{section:behavior_plan}}
+Due to the assumption that opposite lanes in all directions are accessible from any road at the intersection during its green-light phase, it is implied that throughout the green-light until red-light phase of any particular road, all other roads must stay in the red-light phase to avoid traffic conflict.
 \subsubsection{Normal Operation}
 When all four roads are busy, the traffic lights should cycle through their phases one by one and update according to their set default (primary) durations of each light phase to keep the timings fair. The default durations for roads $A,B,C,D$ are as follows, and further expressed in (\ref{eq:normalop}):
 \begin{itemize}
@@ -85,12 +86,12 @@ When all four roads are busy, the traffic lights should cycle through their phas
 	\item All-Red phase ($R$): 3\unit{\second}
 \end{itemize}
 \begin{align}
-	G_n\xrightarrow{30\unit{\second}}Y_n\xrightarrow{3\unit{\second}}R_n\xrightarrow{3\unit{\second}}G_{n+1}\xrightarrow{30\unit{\second}}\dots,\quad{}n:=[A,B,C,D,A,\dots] \label{eq:normalop}
+	G_n\xrightarrow{30\unit{\second}}Y_n\xrightarrow{3\unit{\second}}R_n\xrightarrow{3\unit{\second}}G_{n+1}\xrightarrow{30\unit{\second}}\dots,\quad{}n\in\{A,B,C,D\} \label{eq:normalop}
 \end{align}
 \subsubsection{Low Car Density Detection}
-Within the entire green-light phase of any road, if its sensor has detected no car on that road for 5\unit{\second}, the system shall immediately skip to the yellow-light phase and continue with the normal operation phase durations until the next green-light phase.
+The green light phase on roads that are detected to be not so busy can be skipped forward after its minimum duration (determined by the low car density timeout duration; 5\si{\second}) to allow traffic for the next road. So, within the entire green-light phase, whenever the sensor at the green-light road has detected no car for 5\unit{\second}, the system shall immediately skip to the yellow-light phase and continue with the normal operation phase durations until the next green-light phase.
 \begin{align}
 	G_n\xrightarrow[5\unit{\second}\text{ w/ no car}]{\text{max }30\unit{\second}}Y_n\xrightarrow{3\unit{\second}}\dots
 \end{align}
 \subsubsection{Underused Road Detection}
-At any point during system operation, if any road has had no car detected for at least 30\unit{\second} or since system initialisation, the road will be closed off during its red-light phase (then kept in red-light phase) indefinitely or until the next time a car is detected on that road. If there is only one or no road is left active with cars passing through, the last road in green-light phase will be stuck in green-light phase indefinitely or until the next time a different road is reopened with a car detection.
+Underused roads that have been empty for a long time can be ignored by the system to minimize redundant green-light phases. At any point during system operation, if a road has had no car detected for at least 30\unit{\second} or since system initialisation, the road is closed off during its red-light phase (then kept in red-light phase) indefinitely or until the next time a car is detected on that road. If there is only one or no road left active with cars passing through, the last road in green-light phase will be stuck in green-light phase indefinitely or until the next time a different road is reopened by a car detection.

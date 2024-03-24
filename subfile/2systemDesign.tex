@@ -1,5 +1,6 @@
 \section{System Design}
-Partly inspired by one of our reference textbooks~\cite{book:harris}, the \acs{tlcs} \ac{fsm} is broken down into simpler interacting state machines, the process of which is called ``factoring''~\cite{book:harris}. The \acs{tlcs} \acs{fsm} design has one fundamental state machine (Lights; Figure~\ref{fig:light_fsm}) which keeps track of the three light signal states $G,Y,R$, supported by seven other state machines (Index, Primary Counter, Secondary Counter, and four underused road detection counters). All of these state machines are designed to update in parallel and in the same phase with each other when connected to an oscillating clock.
+The Moore model \cite{book:harris} is chosen over the Mealy model \cite{book:harris} for our \ac{tlcs} \ac{fsm} as traffic light operations are inherently rhythmic and have no need to asynchronously react to any input to change its output within the same state. Partly inspired by one of our reference textbooks~\cite{book:harris}, the \ac{tlcs} is broken down into simpler interacting state machines, the process of which is called ``factoring''~\cite{book:harris}. The \ac{tlcs} \ac{fsm} design has one fundamental state machine (Lights; Figure~\ref{fig:light_fsm}) which keeps track of the three light signal states $G,Y,R$, supported by seven other state machines (Index, Primary Counter, Secondary Counter, and four counters within Underused Road Detector). All of these state machines are designed to update in parallel and in the same phase with each other when connected to an oscillating clock.
+\subsection{Lights \acs{fsm}}
 \begin{figure}[H]
 	\setstretch{1}
 	\centering
@@ -22,7 +23,56 @@ Partly inspired by one of our reference textbooks~\cite{book:harris}, the \acs{t
 	\caption{Lights \acs{fsm}.\label{fig:light_fsm}}
 	\par
 \end{figure}
-The Index \acs{fsm} (Figure~\ref{fig:index_fsm}) is used to keep track of the one traffic light in focus out of four possible options $A,B,C,D$ from each road of the cross intersection. Only one of them at any given time will reflect the state of the Lights \acs{fsm}, while all other traffic lights are to be set to red light. When no road is detected as underused, the index shall be incremented one by one, cycling through all four roads, as depicted in the figure. For the sake of avoiding visual clutter, the figure omits the depiction of all possible state skip transitions due to different possible index increment offset values (\texttt{inc\_offset}) introduced by the underused road detection feature. In such transitions, the index may skip forward two to three counts from any state, or even remain at the same value.
+This \ac{fsm} (Figure~\ref{fig:light_fsm}) outputs three bits via a variable named \texttt{tl\_signal}, where bits 0, 1 and 2 correspond to green light, yellow light, and red light, respectively. An output `1' on a bit indicates the corresponding light should be switched on. During system initialization, \ac{fsm} first resets at INIT state where all lights are off, then starts cycling through states $G$, $Y$, and $R$ forever according to specified conditions, while changing the active light to match its state through its \texttt{tl\_signal} output.
+
+Both $Y$ and $R$ states cannot be interrupted and always adhere to the set delay at the supporting Primary Counter (\texttt{counter\_p}) \ac{fsm} until its output bit \texttt{p\_timeout} is `1', signalling it is time for the next light state.
+
+The $G$ state, while also dependent on \texttt{p\_timeout} signal similar to $Y$ and $R$, also checks the output bit named \texttt{s\_timeout} from the Secondary Counter (\texttt{counter\_s}) \ac{fsm}. A `1' from \texttt{s\_timeout} bit would signal it is time to skip to next state ($Y$) due to low traffic density on the current green-light road. At the same time, it would also check the sensor on the road according to the current index pointed by Index \ac{fsm} through external input bit \texttt{sensor[index]} to confirm that there is still no car triggering the sensor during the last moment where \texttt{s\_timeout} is already `1' and $G$ state is ready to be skipped. In short, the green light will change to yellow either when \texttt{p\_timeout} is `1', or when \texttt{s\_timeout} is `1' and \texttt{sensor[index]} is still `0'.
+
+However, the $G$ state is possible to be held at the same state by the 2-bit variable \texttt{inc\_offset}, which is calculated from the output variable \texttt{ur\_list} of the supporting Underused Road Detector \ac{fsm}. Whenever the value of \texttt{inc\_offset} becomes 3, it would indicate all 3 other roads are closed and ignored due to underusage, hence there would be no need to switch the green light to another road. When the timers at \texttt{counter\_p} and \texttt{counter\_s} approach timeout, they would stay at timeout state while Lights is stuck on $G$ state, then whenever a different road is reopened by the system, \texttt{inc\_offset} would become 2 or less; the $G$ state would be unstuck and let the timeout signals \texttt{p\_timeout} and \texttt{s\_timeout} take control to switch to $Y$ state.
+\begin{table}[H]
+	\renewcommand{\arraystretch}{1.5}
+	\setlength{\tabcolsep}{9pt}
+	\setlength{\cmidrulekern}{.4em}
+	\centering
+	\caption{Lights \acs{fsm} State Table.\label{tab:lights_st}}
+	\begin{NiceTabular}[t]{W{c}{2cm}cccW{c}{2cm}}
+		\toprule
+		\Block{2-1}{\makecell{Present                                                                                                                                                                                                  \\State}} & \multicolumn{3}{c}{Next State} & \Block{2-1}{\makecell{Output\\\texttt{tl\_signal}}}                       \\
+		\cmidrule(rl){2-4}
+		     & \footnotesize\texttt{default} & \footnotesize\texttt{p\_timeout}                                                                                        & \footnotesize\ttfamily\makecell{(p\_timeout ||                \\(s\_timeout \&\&\\!sensor[index])) \&\& \\inc\_offset <= 2} &   \\
+		%\cmidrule(r){1-1}\cmidrule(rl){2-2}\cmidrule(rl){3-3}\cmidrule(rl){4-4}\cmidrule(l){5-5}
+		\cmidrule{1-5}
+		INIT & $G$                           & ---\tabularnote[*]{\footnotesize{`---' indicates the particular condition check does not exist for the present state.}} & ---                                            & \texttt{000} \\
+		$G$  & $G$                           & ---                                                                                                                     & $Y$                                            & \texttt{001} \\
+		$Y$  & $Y$                           & $R$                                                                                                                     & ---                                            & \texttt{010} \\
+		$R$  & $R$                           & $G$                                                                                                                     & ---                                            & \texttt{100} \\
+		\bottomrule
+	\end{NiceTabular}
+\end{table}
+\begin{table}[H]
+	\renewcommand{\arraystretch}{1.5}
+	\setlength{\tabcolsep}{9pt}
+	\setlength{\cmidrulekern}{.4em}
+	\centering
+	\caption{Lights \acs{fsm} State Assigned Table.\label{tab:lights_sat}}
+	\begin{NiceTabular}[t]{W{c}{2.3cm}cccW{c}{2cm}}
+		\toprule
+		\Block{2-1}{\makecell{Present                                                                                                                                                                                                                                                          \\State}} & \multicolumn{3}{c}{Next State} & \Block{2-1}{\makecell{Output}}                       \\
+		\cmidrule(rl){2-4}
+		                                     & \footnotesize\texttt{default}     & \footnotesize\texttt{p\_timeout}                                                                                        & \footnotesize\ttfamily\makecell{(p\_timeout ||                                    \\(s\_timeout \&\&\\!sensor[index])) \&\& \\inc\_offset <= 2} &   \\
+		%\cmidrule(r){1-1}\cmidrule(rl){2-2}\cmidrule(rl){3-3}\cmidrule(rl){4-4}\cmidrule(l){5-5}
+		\cmidrule{1-5}
+		\footnotesize\texttt{current\_state} & \footnotesize\texttt{next\_state} & \footnotesize\texttt{next\_state}                                                                                       & \footnotesize\texttt{next\_state}              & \footnotesize\texttt{tl\_signal} \\
+		\cmidrule{1-5}
+		\texttt{00}                          & \texttt{01}                       & ---\tabularnote[*]{\footnotesize{`---' indicates the particular condition check does not exist for the present state.}} & ---                                            & \texttt{000}                     \\
+		\texttt{01}                          & \texttt{01}                       & ---                                                                                                                     & \texttt{10}                                    & \texttt{001}                     \\
+		\texttt{10}                          & \texttt{10}                       & \texttt{11}                                                                                                             & ---                                            & \texttt{010}                     \\
+		\texttt{11}                          & \texttt{11}                       & \texttt{01}                                                                                                             & ---                                            & \texttt{100}                     \\
+		\bottomrule
+	\end{NiceTabular}
+\end{table}
+\subsection{Index \acs{fsm}}
 \begin{figure}[H]
 	\setstretch{1}
 	\centering
@@ -35,100 +85,205 @@ The Index \acs{fsm} (Figure~\ref{fig:index_fsm}) is used to keep track of the on
 		\node[state with output] (C) [below=3cm of B] {$C$ \nodepart{lower} \texttt{10}};
 		\node[state with output] (D) [below=3cm of A] {$D$ \nodepart{lower} \texttt{11}};
 
-		\path[->] (A) edge [bend left] node [font=\footnotesize\ttfamily,align=center] {p\_timeout\\$(R\rightarrow{}G)$} (B)
-		edge [out=150,in=120,loop] node [font=\footnotesize\ttfamily] {default} ()
-		(B) edge [bend left] node [font=\footnotesize\ttfamily,align=center] {p\_timeout\\$(R\rightarrow{}G)$} (C)
-		edge [out=60,in=30,loop] node [font=\footnotesize\ttfamily] {default} ()
-		(C) edge [bend left] node [font=\footnotesize\ttfamily,align=center] {p\_timeout\\$(R\rightarrow{}G)$} (D)
-		edge [out=-30,in=-60,loop] node [font=\footnotesize\ttfamily] {default} ()
-		(D) edge [bend left] node [font=\footnotesize\ttfamily,align=center] {p\_timeout\\$(R\rightarrow{}G)$} (A)
-		edge [out=-120,in=-150,loop] node [font=\footnotesize\ttfamily] {default} ();
+		\path[->] (A) edge [bend left] node [font=\footnotesize\ttfamily,align=center] {index\_inc \&\&\\inc\_offset = 0} (B)
+		edge [out=150,in=120,loop] node [font=\footnotesize\ttfamily,align=center] {default} ()
+		(B) edge [bend left] node [font=\footnotesize\ttfamily,align=center] {index\_inc \&\&\\inc\_offset = 0} (C)
+		edge [out=60,in=30,loop] node [font=\footnotesize\ttfamily,align=center] {default} ()
+		(C) edge [bend left] node [font=\footnotesize\ttfamily,align=center] {index\_inc \&\&\\inc\_offset = 0} (D)
+		edge [out=-30,in=-60,loop] node [font=\footnotesize\ttfamily,align=center] {default} ()
+		(D) edge [bend left] node [font=\footnotesize\ttfamily,align=center] {index\_inc \&\&\\inc\_offset = 0} (A)
+		edge [out=-120,in=-150,loop] node [font=\footnotesize\ttfamily,align=center] {default} ();
 	\end{tikzpicture}
 	\caption{Index \acs{fsm} (Simplified by omitting index skip transitions).\label{fig:index_fsm}}
 	\par
 \end{figure}
-The Primary Counter \acs{fsm} (Figure~\ref{fig:counterP_fsm}) is a simple counter with the important purpose of counting down from the set primary timeout duration of a Light state without intervention from any special condition. Its output provides the \texttt{p\_timeout} condition signal for the Lights and Index \acs{fsm}. Each Light state duration shall not ever exceed that which is set at this counter, unless the number of dynamically closed roads leaves one or less remaining road active.
-\begin{figure}[H]
-	\setstretch{1}
+The Index \ac{fsm} (Figure~\ref{fig:index_fsm}) outputs the 2-bit variable \texttt{index} to keep track of the one traffic light in focus out of four possible options $A$, $B$, $C$, $D$, each corresponding to a different road at the cross intersection. Only the traffic light pointed by \texttt{index} at any given time will reflect the state of the Lights \ac{fsm}, while all other traffic lights are to be set to red light by an interpreter logic block.
+
+When no road is detected as underused, the index shall be incremented one by one whenever the boolean flag \texttt{index\_inc} is set, which happens during each transition from $R$ to $G$ state of the Lights \ac{fsm}, so as the all-red phase ends, the green light is switched to the subsequent road index. For the sake of avoiding visual clutter, Figure~\ref{fig:index_fsm} omits the depiction of additional possible state skip transitions caused by different possible index increment offset values (\texttt{inc\_offset}) introduced by the underused road detection feature. The variable \texttt{inc\_offset} signals how many underused roads to skip over, starting from the current index. As shown in the state table and state transition table (Table~\ref{tab:index_st} and~\ref{tab:index_sat}), for transitions where \texttt{inc\_offset} has a non-zero value, the index may skip forward two to three counts from present state, or even remain at the same state.
+\begin{table}[H]
+	\renewcommand{\arraystretch}{1.5}
+	\setlength{\tabcolsep}{6pt}
+	\setlength{\cmidrulekern}{.4em}
 	\centering
-	\begin{tikzpicture}[shorten >=1.5pt, shorten <=1.5pt,node distance=4cm,on grid,auto]
-		% \draw[help lines] (0,0) grid (3,2);
-
-		\node[state with output,initial] (Sp) {$S_p$ \nodepart{lower} \texttt{0}};
-		\node[state with output] (Cp) [right=3cm of Sp] {$C_p$ \nodepart{lower} \texttt{0}};
-		\node[state with output] (Tp) [below=3cm of Cp] {$T_p$ \nodepart{lower} \texttt{1}};
-		% \node[state with output,initial]  (INIT) [below left=0.7cm and 3cm of A] {INIT \nodepart{lower} \texttt{00}};
-
-		\path[->]
-		(Sp) edge [] node [font=\footnotesize\ttfamily] {} (Cp)
-		(Cp) edge [out=60,in=30,loop] node [font=\footnotesize\ttfamily] {|current\_count} ()
-		edge [] node [font=\footnotesize\ttfamily] {\sim{}|current\_count} (Tp);
-
-		\matrix [draw,above=0.5cm,anchor=south east] at (current bounding box.north east) {
-			\node [label=right:Set] {$S_p$};       \\
-			\node [label=right:Countdown] {$C_p$}; \\
-			\node [label=right:Timeout] {$T_p$};   \\
-		};
-	\end{tikzpicture}
-	\caption{\texttt{counter\_p} (Primary Counter) \acs{fsm};\\restarts at every transition between states of Lights \acs{fsm}.\label{fig:counterP_fsm}}
-	\par
-\end{figure}
-The Secondary Counter \acs{fsm} (Figure~\ref{fig:counterS_fsm}) acts as a countdown timer parallel to the Primary Counter to keep track of the time since the sensor at the specified road index has last been triggered by a car. Its output provides the \texttt{s\_timeout} condition signal for the Lights \acs{fsm}. Utilised only for the $G$ state of Lights \acs{fsm}, this counter will signal the Lights \acs{fsm} to skip to $Y$ state if the sensor has had detected no car for 5\unit{\second} within the green-light phase.
-\begin{figure}[H]
-	\setstretch{1}
+	\caption{Index \acs{fsm} State Table.\label{tab:index_st}}
+	\begin{NiceTabular}[t]{cccccc}
+		\toprule
+		\Block{2-1}{\makecell{Present                                                                                              \\State}} & \multicolumn{4}{c}{Next State} & \Block{2-1}{\makecell{Output\\\texttt{index}}}                       \\
+		\cmidrule(rl){2-5}
+		    & \footnotesize\ttfamily\makecell{default} & \footnotesize\ttfamily\makecell{index\_inc \&\&                           \\inc\_offset = 0}                                                                                        & \footnotesize\ttfamily\makecell{index\_inc \&\&\\inc\_offset = 1} & \footnotesize\ttfamily\makecell{index\_inc \&\&\\inc\_offset = 2} \\
+		%\cmidrule(r){1-1}\cmidrule(rl){2-2}\cmidrule(rl){3-3}\cmidrule(rl){4-4}\cmidrule(l){5-5}
+		\cmidrule{1-6}
+		$A$ & $A$                                      & $B$                                             & $C$ & $D$ & \texttt{00} \\
+		$B$ & $B$                                      & $C$                                             & $D$ & $A$ & \texttt{01} \\
+		$C$ & $C$                                      & $D$                                             & $A$ & $B$ & \texttt{10} \\
+		$D$ & $D$                                      & $A$                                             & $B$ & $C$ & \texttt{11} \\
+		\bottomrule
+	\end{NiceTabular}
+\end{table}
+\begin{table}[H]
+	\renewcommand{\arraystretch}{1.5}
+	\setlength{\tabcolsep}{6pt}
+	\setlength{\cmidrulekern}{.4em}
 	\centering
-	\begin{tikzpicture}[shorten >=1.5pt, shorten <=1.5pt,node distance=4cm,on grid,auto]
-		% \draw[help lines] (0,0) grid (3,2);
+	\caption{Index \acs{fsm} State Assigned Table.\label{tab:index_sat}}
+	\begin{NiceTabular}[t]{cccccc}
+		\toprule
+		\Block{2-1}{\makecell{Present                                                                                                                                                                                                                                                                                                                                                  \\State}} & \multicolumn{4}{c}{Next State} & \Block{2-1}{\makecell{Output}}                       \\
+		\cmidrule(rl){2-5}
+		                                                               & \footnotesize\ttfamily\makecell{default}                     & \footnotesize\ttfamily\makecell{index\_inc \&\&                                                                                                                                                                                                \\inc\_offset = 0}                                                                                        & \footnotesize\ttfamily\makecell{index\_inc \&\&\\inc\_offset = 1} & \footnotesize\ttfamily\makecell{index\_inc \&\&\\inc\_offset = 2} \\
+		%\cmidrule(r){1-1}\cmidrule(rl){2-2}\cmidrule(rl){3-3}\cmidrule(rl){4-4}\cmidrule(l){5-5}
+		\cmidrule{1-6}
+		$\scriptstyle \text{\footnotesize\texttt{index}}_{\text{n}-1}$ & $\scriptstyle \text{\footnotesize\texttt{index}}_{\text{n}}$ & $\scriptstyle \text{\footnotesize\texttt{index}}_{\text{n}}$ & $\scriptstyle \text{\footnotesize\texttt{index}}_{\text{n}}$ & $\scriptstyle \text{\footnotesize\texttt{index}}_{\text{n}}$ & $\scriptstyle \text{\footnotesize\texttt{index}}$ \\
+		\cmidrule{1-6}
+		\texttt{00}                                                    & \texttt{00}                                                  & \texttt{01}                                                  & \texttt{10}                                                  & \texttt{11}                                                  & \texttt{00}                                       \\
+		\texttt{01}                                                    & \texttt{01}                                                  & \texttt{10}                                                  & \texttt{11}                                                  & \texttt{00}                                                  & \texttt{01}                                       \\
+		\texttt{10}                                                    & \texttt{10}                                                  & \texttt{11}                                                  & \texttt{00}                                                  & \texttt{01}                                                  & \texttt{10}                                       \\
+		\texttt{11}                                                    & \texttt{11}                                                  & \texttt{00}                                                  & \texttt{01}                                                  & \texttt{10}                                                  & \texttt{11}                                       \\
+		\bottomrule
+	\end{NiceTabular}
+\end{table}
+\subsection{Counter \acs{fsm}}
+The Counter \ac{fsm} module is instantiated once for Primary Counter \ac{fsm}, once for Secondary Counter \ac{fsm}, and an additional four times by Underused Road Detector \ac{fsm} for parallel time monitoring purposes. Each instantiation has their \ac{io} hooked to different signal configurations in order to carry out their unique tasks.
 
-		\node[state with output,initial] (S) {$S_s$ \nodepart{lower} \texttt{0}};
-		\node[state with output] (C) [right=3cm of S] {$C_s$ \nodepart{lower} \texttt{0}};
-		\node[state with output] (T) [below=3cm of C] {$T_s$ \nodepart{lower} \texttt{1}};
-		% \node[state with output,initial]  (INIT) [below left=0.7cm and 3cm of A] {INIT \nodepart{lower} \texttt{00}};
+The Counter \ac{fsm} holds a 16-bit value with the variable \texttt{current\_count} to be counted down on every clock cycle until it reaches `0'. On \ac{tlcs} reset, the \texttt{current\_count} is initialized at `0'. Due to the huge number of possible \ac{fsm} states derived from 16 bits of \texttt{current\_count}, after trial and error it was determined the state machine transitions could only be illustrated on paper using its state assigned table with an alias $y$ to group a large number of unique states with similar meanings (Table~\ref{tab:pcounter_sat}).
 
-		\path[->]
-		(S) edge [bend left] node [font=\footnotesize\ttfamily] {!sensor[index]} (C)
-		edge [out=150,in=120,loop] node [font=\footnotesize\ttfamily] {sensor[index]} ()
-		(C) edge [bend left] node [font=\footnotesize\ttfamily] {sensor[index]} (S)
-		edge [out=60,in=30,loop] node [font=\footnotesize\ttfamily,align=left] {|current\_count \&\&\\!sensor[index]} ()
-		edge [] node [font=\footnotesize\ttfamily] {\sim{}|current\_count} (T);
-
-		\matrix [draw,above=0.5cm,anchor=south east] at (current bounding box.north east) {
-			\node [label=right:Set] {$S_s$};       \\
-			\node [label=right:Countdown] {$C_s$}; \\
-			\node [label=right:Timeout] {$T_s$};   \\
-		};
-	\end{tikzpicture}
-	\caption{\texttt{counter\_s} (Secondary Counter) \acs{fsm};\\restarts only at transitions to and during $G$ state of Lights \acs{fsm}.\label{fig:counterS_fsm}}
-	\par
-\end{figure}
-The underused road detection module utilises four of the same counter \acs{fsm} (Figure~\ref{fig:countersUR_fsm}) updating in parallel, one for each road. The counters are initialised at the timeout (underusage detected) state when reset and then always restarts at a 30\unit{\second} countdown whenever a sensor detects a car. The output bit of these four state machines are concatenated into a single binary array \texttt{ur\_list[3:0]}, which is processed combinationally with the current index number to calculate an index increment offset number \texttt{inc\_offset} for the next index jump.
-\begin{figure}[H]
-	\setstretch{1}
+As shown in the table, the Counter \ac{fsm} is reloaded by receiving a boolean \texttt{counter\_set} signal along with its \texttt{load} value as a starting point for the countdown. The output timeout boolean flag \texttt{flag\_0} will only become `1' when \texttt{current\_count} is `0'.
+\begin{table}[H]
+	\renewcommand{\arraystretch}{1.5}
+	\setlength{\tabcolsep}{6pt}
+	\setlength{\cmidrulekern}{.4em}
 	\centering
-	\begin{tikzpicture}[shorten >=1.5pt, shorten <=1.5pt,node distance=4cm,on grid,auto]
-		% \draw[help lines] (0,0) grid (3,2);
+	\caption{Counter \acs{fsm} State Assigned Table.\label{tab:pcounter_sat}}
+	\begin{NiceTabular}[t]{W{c}{2.8cm}cccW{c}{2cm}}
+		\toprule
+		\Block{2-1}{\makecell{Present                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          \\State}} & \multicolumn{3}{c}{Next State} & \Block{2-1}{\makecell{Output}}                       \\
+		\cmidrule(rl){2-4}
+		                                                                                                                   & \footnotesize\ttfamily\makecell{
+		!counter\_set \&\&                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     \\																	|current\_count                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         }                                                                                                                                                                                                                                                                                              & \footnotesize\ttfamily\makecell{!counter\_set \&\&\\\sim|current\_count}                                                                                         & \footnotesize\texttt{counter\_set}                                                                             \\
+		%\cmidrule(r){1-1}\cmidrule(rl){2-2}\cmidrule(rl){3-3}\cmidrule(rl){4-4}\cmidrule(l){5-5}
+		\cmidrule{1-5}
+		$\scriptstyle \text{\footnotesize\texttt{current\_count}}_{\text{n}-1}$                                            & $\scriptstyle \text{\footnotesize\texttt{current\_count}}_{\text{n}}$                                                                                                                                                                                                                                                              & $\scriptstyle \text{\footnotesize\texttt{current\_count}}_{\text{n}}$                                                                       & $\scriptstyle \text{\footnotesize\texttt{current\_count}}_{\text{n}}$ & $\scriptstyle \text{\texttt{flag\_0}}$ \\
+		\cmidrule{1-5}
+		\footnotesize\texttt{load}                                                                                         & \footnotesize\ttfamily\makecell{(load - 1)                                                                                                                                                                                                                                                                                       } & $\times$\tabularnote[*]{\footnotesize{`$\times$' indicates the condition is logically impossible for the present state and so is ignored.}} & \footnotesize\texttt{load}                                            & \texttt{0}                             \\
+		$y$\tabularnote{\footnotesize{$y$ is an alias for any non-zero value that isn't the initial \texttt{load} value.}} & $y-1$                                                                                                                                                                                                                                                                                                                              & $\times$                                                                                                                                    & \footnotesize\texttt{load}                                            & \texttt{0}                             \\
+		\texttt{0}                                                                                                         & $\times$                                                                                                                                                                                                                                                                                                                           & \texttt{0}                                                                                                                                  & \footnotesize\texttt{load}                                            & \texttt{1}                             \\
+		\bottomrule
+	\end{NiceTabular}
+\end{table}
+\subsubsection{Primary Counter \acs{fsm}}
+The Primary Counter \ac{fsm} is a straightforward counter for counting down from the set primary timeout duration of a Light state without intervention from any special condition. Its output \texttt{flag\_0} is directly hooked to the \texttt{p\_timeout} condition signal for the Lights \ac{fsm}. Each Light state duration shall not ever exceed that which is set at this counter, unless the number of dynamically closed roads leaves one or less remaining road active.
 
-		\node[state with output] (S) {$S_n$ \nodepart{lower} \texttt{0}};
-		\node[state with output] (C) [right=3cm of S] {$C_n$ \nodepart{lower} \texttt{0}};
-		\node[state with output,initial] (T) [below=3cm of C] {$T_n$ \nodepart{lower} \texttt{1}};
-		% \node[state with output,initial]  (INIT) [below left=0.7cm and 3cm of A] {INIT \nodepart{lower} \texttt{00}};
+The Primary Counter is reloaded by the Lights \ac{fsm} during each transition from one light state to the next.
+% \begin{figure}[H]
+% 	\setstretch{1}
+% 	\centering
+% 	\begin{tikzpicture}[shorten >=1.5pt, shorten <=1.5pt,node distance=4cm,on grid,auto]
+% 		% \draw[help lines] (0,0) grid (3,2);
 
-		\path[->]
-		(S) edge [bend left] node [font=\footnotesize\ttfamily] {!sensor[index]} (C)
-		edge [out=150,in=120,loop] node [font=\footnotesize\ttfamily] {sensor[index]} ()
-		(C) edge [bend left] node [font=\footnotesize\ttfamily] {sensor[index]} (S)
-		edge [out=60,in=30,loop] node [font=\footnotesize\ttfamily,align=left] {|current\_count \&\&\\!sensor[index]} ()
-		edge [] node [font=\footnotesize\ttfamily] {\sim{}|current\_count} (T)
-		(T) edge [bend left] node [font=\footnotesize\ttfamily] {sensor[index]} (S)
-		edge [out=-30,in=-60,loop] node [font=\footnotesize\ttfamily] {!sensor[index]} ();
+% 		\node[state with output,initial,initial text=\texttt{counter\_set}] (Sp) {$S_p$ \nodepart{lower} \texttt{0}};
+% 		\node[state with output] (Cp) [right=3cm of Sp] {$C_p$ \nodepart{lower} \texttt{0}};
+% 		\node[state with output,accepting] (Tp) [below=3cm of Cp] {$T_p$ \nodepart{lower} \texttt{1}};
+% 		% \node[state with output,initial]  (INIT) [below left=0.7cm and 3cm of A] {INIT \nodepart{lower} \texttt{00}};
 
-		\matrix [draw,above=0.5cm,anchor=south east] at (current bounding box.north east) {
-		\node [label=right:Set] {$S_n$};                                     \\
-		\node [label=right:Countdown] {$C_n$};                               \\
-		\node [label=right:Timeout] {$T_n$};                                 \\
-		\node [label=right:{$[A,B,C,D]$}] {$n$}; \\
-		};
-	\end{tikzpicture}
-	\caption{Underused road detection counter \acs{fsm} structure.\label{fig:countersUR_fsm}}
-	\par
-\end{figure}
+% 		\path[->]
+% 		(Sp) edge [] node [font=\footnotesize\ttfamily] {} (Cp)
+% 		(Cp) edge [out=60,in=30,loop] node [font=\footnotesize\ttfamily] {|current\_count} ()
+% 		edge [] node [font=\footnotesize\ttfamily] {\sim{}|current\_count} (Tp);
+
+% 		\matrix [draw,above=0.5cm,anchor=south east] at (current bounding box.north east) {
+% 			\node [label=right:Set] {$S_p$};       \\
+% 			\node [label=right:Countdown] {$C_p$}; \\
+% 			\node [label=right:Timeout] {$T_p$};   \\
+% 		};
+% 	\end{tikzpicture}
+% 	\caption{Primary Counter (\texttt{counter\_p}) \ac{fsm};\\restarts at every transition between states of Lights \ac{fsm}.\label{fig:counterP_fsm}}
+% 	\par
+% \end{figure}
+% \begin{table}[H]
+% 	\renewcommand{\arraystretch}{1.5}
+% 	\setlength{\tabcolsep}{9pt}
+% 	\setlength{\cmidrulekern}{.4em}
+% 	\centering
+% 	\caption{Primary Counter FSM State Table.\label{tab:pcounter_st}}
+% 	\begin{NiceTabular}[t]{W{c}{2cm}cccW{c}{2cm}}
+% 		\toprule
+% 		\Block{2-1}{\makecell{Present                                                                                                                                                                                                           \\State}} & \multicolumn{3}{c}{Next State} & \Block{2-1}{\makecell{Output\\\texttt{flag\_0}}}                       \\
+% 		\cmidrule(rl){2-4}
+% 		      & \footnotesize\texttt{|current\_count}                                                                                             & \footnotesize\texttt{\sim|current\_count} & \footnotesize\texttt{counter\_set}              \\
+% 		%\cmidrule(r){1-1}\cmidrule(rl){2-2}\cmidrule(rl){3-3}\cmidrule(rl){4-4}\cmidrule(l){5-5}
+% 		\cmidrule{1-5}
+% 		$S_p$ & $C_p$                                                                                                                             & $T_p$                                     & $S_p$                              & \texttt{0} \\
+% 		$C_p$ & $C_p$                                                                                                                             & $T_p$                                     & $S_p$                              & \texttt{0} \\
+% 		$T_p$ & $\times$\tabularnote[*]{\footnotesize{`$\times$' indicates the condition is impossible for the present state and so is ignored.}} & $T_p$                                     & $S_p$                              & \texttt{1} \\
+% 		\bottomrule
+% 	\end{NiceTabular}
+% \end{table}
+
+\subsubsection{Secondary Counter \acs{fsm}}
+The Secondary Counter \ac{fsm} acts as a countdown timer to keep track of the time since the sensor at the specified road index has last been triggered by a car. Its output \texttt{flag\_0} is hooked to the \texttt{s\_timeout} condition signal of the Lights \ac{fsm}. This counter is only utilised during the $G$ state of Lights \ac{fsm}. It will signal the Lights \ac{fsm} to skip from $G$ to $Y$ state if the sensor has had detected no car for 5\unit{\second} within the green-light phase.
+
+The Secondary Counter is reloaded to count down from 5 seconds by Lights \ac{fsm} in 3 scenarios:
+\begin{itemize}
+	\item Transition from INIT to $G$ state.
+	\item Transition from $R$ to $G$ state.
+	\item Every time \texttt{sensor[index]} is triggered `1' during $G$ state.
+\end{itemize}
+% \begin{figure}[H]
+% 	\setstretch{1}
+% 	\centering
+% 	\begin{tikzpicture}[shorten >=1.5pt, shorten <=1.5pt,node distance=4cm,on grid,auto]
+% 		% \draw[help lines] (0,0) grid (3,2);
+
+% 		\node[state with output,initial] (S) {$S_s$ \nodepart{lower} \texttt{0}};
+% 		\node[state with output] (C) [right=3cm of S] {$C_s$ \nodepart{lower} \texttt{0}};
+% 		\node[state with output,accepting] (T) [below=3cm of C] {$T_s$ \nodepart{lower} \texttt{1}};
+% 		% \node[state with output,initial]  (INIT) [below left=0.7cm and 3cm of A] {INIT \nodepart{lower} \texttt{00}};
+
+% 		\path[->]
+% 		(S) edge [bend left] node [font=\footnotesize\ttfamily] {!sensor[index]} (C)
+% 		edge [out=150,in=120,loop] node [font=\footnotesize\ttfamily] {sensor[index]} ()
+% 		(C) edge [bend left] node [font=\footnotesize\ttfamily] {sensor[index]} (S)
+% 		edge [out=60,in=30,loop] node [font=\footnotesize\ttfamily,align=left] {|current\_count \&\&\\!sensor[index]} ()
+% 		edge [] node [font=\footnotesize\ttfamily] {\sim{}|current\_count} (T);
+
+% 		\matrix [draw,above=0.5cm,anchor=south east] at (current bounding box.north east) {
+% 			\node [label=right:Set] {$S_s$};       \\
+% 			\node [label=right:Countdown] {$C_s$}; \\
+% 			\node [label=right:Timeout] {$T_s$};   \\
+% 		};
+% 	\end{tikzpicture}
+% 	\caption{\texttt{counter\_s} (Secondary Counter) \ac{fsm};\\restarts only at transitions to and during $G$ state of Lights \ac{fsm}.\label{fig:counterS_fsm}}
+% 	\par
+% \end{figure}
+\subsubsection{Underused Road Detector \acs{fsm}}
+The Underused Road Detector \ac{fsm} module utilises four Counter \ac{fsm}s running in parallel, each one monitoring a different road for underusage using its delegated \texttt{sensor} bit hooked to \texttt{counter\_set} input and a constant value corresponding to 30\si{\second} hooked to \texttt{load} input. During \ac{tlcs} initialization, all roads are assumed to be closed until a car detection occurs. Hence, all counters in Underused Road Detector \ac{fsm} are initialised at the timeout (underusage detected) state when reset and then always restarts at a 30\unit{\second} countdown whenever their corresponding sensor detects a car. The output bit \texttt{flag\_0} of these four state machines are concatenated into a single vector \texttt{ur\_list[3:0]} as the output of Underused Road Detector \ac{fsm}, which is then processed combinationally with the current \texttt{index} number to calculate the index increment offset number \texttt{inc\_offset} for the next index jump.
+% \begin{figure}[H]
+% 	\setstretch{1}
+% 	\centering
+% 	\begin{tikzpicture}[shorten >=1.5pt, shorten <=1.5pt,node distance=4cm,on grid,auto]
+% 		% \draw[help lines] (0,0) grid (3,2);
+
+% 		\node[state with output] (S) {$S_n$ \nodepart{lower} \texttt{0}};
+% 		\node[state with output] (C) [right=3cm of S] {$C_n$ \nodepart{lower} \texttt{0}};
+% 		\node[state with output,initial,accepting] (T) [below=3cm of C] {$T_n$ \nodepart{lower} \texttt{1}};
+% 		% \node[state with output,initial]  (INIT) [below left=0.7cm and 3cm of A] {INIT \nodepart{lower} \texttt{00}};
+
+% 		\path[->]
+% 		(S) edge [bend left] node [font=\footnotesize\ttfamily] {!sensor[index]} (C)
+% 		edge [out=150,in=120,loop] node [font=\footnotesize\ttfamily] {sensor[index]} ()
+% 		(C) edge [bend left] node [font=\footnotesize\ttfamily] {sensor[index]} (S)
+% 		edge [out=60,in=30,loop] node [font=\footnotesize\ttfamily,align=left] {|current\_count \&\&\\!sensor[index]} ()
+% 		edge [] node [font=\footnotesize\ttfamily] {\sim{}|current\_count} (T)
+% 		(T) edge [bend left] node [font=\footnotesize\ttfamily] {sensor[index]} (S)
+% 		edge [out=-30,in=-60,loop] node [font=\footnotesize\ttfamily] {!sensor[index]} ();
+
+% 		\matrix [draw,above=0.5cm,anchor=south east] at (current bounding box.north east) {
+% 		\node [label=right:Set] {$S_n$};                                     \\
+% 		\node [label=right:Countdown] {$C_n$};                               \\
+% 		\node [label=right:Timeout] {$T_n$};                                 \\
+% 		\node [label=right:{$[A,B,C,D]$}] {$n$}; \\
+% 		};
+% 	\end{tikzpicture}
+% 	\caption{Underused road detection counter \ac{fsm}.\\There exists 4 of them in one module, each monitoring a different road.\label{fig:countersUR_fsm}}
+% 	\par
+% \end{figure}

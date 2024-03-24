@@ -71,7 +71,9 @@
 \tocloftpagestyle{fancy}
 
 \begin{document}
+\pagenumbering{roman}
 \begin{titlepage}
+	\addcontentsline{toc}{section}{TITLE PAGE}
 	\begin{center}
 		\vspace*{1cm}%\huge
 		\textbf{Dynamic Traffic Light Control System}\\
@@ -109,8 +111,11 @@
 \end{titlepage}
 \sloppy
 \onehalfspacing{}
-\pagenumbering{roman}
+% \pagenumbering{roman}
+\addtocounter{page}{1}
 \renewcommand{\contentsname}{TABLE OF CONTENTS}
+\phantomsection{}
+\addcontentsline{toc}{section}{\contentsname}
 \tableofcontents
 \clearpage
 \renewcommand{\listfigurename}{LIST OF FIGURES}
@@ -128,8 +133,9 @@
 \addcontentsline{toc}{section}{LIST OF ABBREVIATIONS}
 \section*{LIST OF ABBREVIATIONS}
 \begin{acronym}[TLCS]\itemsep0pt
-	\acro{hdl}[HDL]{Hardware Description Language}
 	\acro{fsm}[FSM]{Finite State Machine}
+	\acro{hdl}[HDL]{Hardware Description Language}
+	\acro{io}[I/O]{input and output}
 	\acro{tlcs}[TLCS]{Traffic Light Control System}
 \end{acronym}
 
