@@ -6,7 +6,6 @@
 \usepackage[left=1.5in,right=1in,top=1in,bottom=1in]{geometry} % Set margin
 \usepackage{setspace} % Set line spacing
 \onehalfspacing{}
-\usepackage[labelfont=bf,position=bottom]{caption} % Set bold caption title
 \usepackage{graphicx}
 \usepackage{nicematrix} % table coloring (NiceTabular)
 \usepackage{enumitem} % footnotes with NiceTabular
@@ -15,7 +14,6 @@
 \usepackage[skip=8pt]{parskip} % Set paragraph spacing and indent
 \usepackage{newtxtext,newtxmath} % Times Roman txt & math
 \usepackage[none]{hyphenat} % Paired with \sloppy and [none] for justify
-\usepackage[justification=centering]{caption}
 \usepackage{float} % Precise image location [H]
 % \counterwithout{section}{chapter} % Remove 0. (chapter number) from section numbering
 \counterwithin{figure}{section} % Set section-based counting
@@ -26,12 +24,12 @@
 \usepackage[style=ieee,backend=biber,urldate=long]{biblatex}
 \usepackage{xpatch} % Patch website no date entry
 \xpatchbibdriver{online}
-  {\printtext[parens]{\usebibmacro{date}}}
-  {\iffieldundef{year}
-    {}
-    {\printtext[parens]{\usebibmacro{date}}}}
-  {}
-  {\typeout{There was an error patching biblatex-ieee (specifically, ieee.bbx's @online driver)}}
+{\printtext[parens]{\usebibmacro{date}}}
+{\iffieldundef{year}
+{}
+{\printtext[parens]{\usebibmacro{date}}}}
+{}
+{\typeout{There was an error patching biblatex-ieee (specifically, ieee.bbx's @online driver)}}
 \addbibresource{ref/library.bib}
 \usepackage{siunitx} % insert SI \unit
 \usepackage{longtable} % extend table across pages
@@ -46,11 +44,8 @@
 \usetikzlibrary{automata,positioning,matrix,shapes,arrows.meta}
 \usepackage{rotating} % \rotatebox
 \usepackage{fontspec-luatex}
-\setmonofont{inconsolata} % code font
-\usepackage{xcolor} % colored code box
-\definecolor{light-gray}{gray}{0.90}
-%\newcommand{\code}[1]{\colorbox{light-gray}{\texttt{#1}}}
-%\newcommand{\codes}[1]{\colorbox{light-gray}{\small\texttt{#1}}}
+\setmonofont[StylisticSet={1,3},Ligatures=TeXOff]{inconsolata} % code font
+\usepackage{xcolor} % colored box
 \usepackage{fancyhdr}
 \pagestyle{fancy}
 \fancyhead{} % clear all header fields
@@ -60,6 +55,19 @@
 \fancyfoot[L]{\footnotesize{}Bachelor of Information Technology (Honours) Computer Engineering\\Faculty of Information and Communication Technology (Kampar Campus), UTAR}
 \usepackage{lipsum}
 \usepackage{tocloft} % toc etc. title format
+\newlistof{listing}{lol}{LIST OF SOURCE CODES}
+\usepackage[newfloat=true,outputdir=latexmk_aux]{minted} % supports more code languages
+\setminted[systemverilog]{
+	frame=single,
+	framesep=1mm,
+	baselinestretch=1.2,
+	fontsize=\normalsize}
+\usemintedstyle{bw}
+\usepackage[labelfont=bf,position=bottom,justification=centering]{caption} % Set caption options
+\newenvironment{code}{\captionsetup{type=listing,skip=\abovecaptionskip}}{}
+\SetupFloatingEnvironment{listing}{name=Source Code,fileext=lol}
+\renewcommand\theFancyVerbLine{\footnotesize\arabic{FancyVerbLine}} % code line number formatting
+\counterwithin{listing}{section}
 \newcounter{cntA}
 \newcommand\showcntA{\stepcounter{cntA}\thecntA}
 \renewcommand{\cfttoctitlefont}{\hfill\Large\bfseries}
@@ -68,6 +76,16 @@
 \renewcommand{\cftafterlottitle}{\hfill}
 \renewcommand{\cftloftitlefont}{\hfill\Large\bfseries}
 \renewcommand{\cftafterloftitle}{\hfill}
+\renewcommand{\cftloltitlefont}{\hfill\Large\bfseries}
+\renewcommand{\cftafterloltitle}{\hfill}
+\setlength{\cftfigindent}{0pt}
+\setlength{\cfttabindent}{0pt}
+\setlength{\cftfignumwidth}{4.5em}
+\setlength{\cfttabnumwidth}{4.5em}
+\setlength{\cftlistingnumwidth}{7.5em}
+\renewcommand{\cftfigpresnum}{Figure~}
+\renewcommand{\cfttabpresnum}{Table~}
+\renewcommand{\cftlistingpresnum}{Source Code~}
 \tocloftpagestyle{fancy}
 
 \begin{document}
@@ -130,13 +148,19 @@
 \clearpage
 \titleformat{\section}{\normalfont\Large\bfseries\centering}{\thesection}{1em}{}
 \phantomsection{}
+\addcontentsline{toc}{section}{LIST OF SOURCE CODES}
+\listoflistings
+\clearpage
+\phantomsection{}
 \addcontentsline{toc}{section}{LIST OF ABBREVIATIONS}
 \section*{LIST OF ABBREVIATIONS}
 \begin{acronym}[TLCS]\itemsep0pt
-	\acro{fsm}[FSM]{Finite State Machine}
-	\acro{hdl}[HDL]{Hardware Description Language}
+	\acro{fpga}[FPGA]{field-programmable gate array}
+	\acro{fsm}[FSM]{finite state machine}
+	\acro{hdl}[HDL]{hardware description language}
 	\acro{io}[I/O]{input and output}
-	\acro{tlcs}[TLCS]{Traffic Light Control System}
+	\acro{rtl}[RTL]{register-transfer level}
+	\acro{tlcs}[TLCS]{traffic light control system}
 \end{acronym}
 
 \clearpage
