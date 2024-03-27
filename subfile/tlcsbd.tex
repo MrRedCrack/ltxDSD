@@ -1,0 +1,281 @@
+\bgroup
+\setstretch{.7}
+\resizebox{\textwidth}{!}{
+	\begin{circuitikz}[rotate=90,transform shape]
+
+		%2large chip
+		\ctikzset {multipoles/dipchip/width=17.6}
+		\draw (1.15,2) node [dipchip, num pins=70, hide numbers, no topmark, external pins width=0](chip8){};
+		\node [right, font=\scriptsize\ttfamily, xshift=2mm] at (chip8.pin 1) {dut};
+		\node [above, xshift=-11.5cm] at (chip8.north) {(main.sv)};
+		%inner large chip
+		\ctikzset {multipoles/dipchip/width=14.1}
+		\draw (0.15,2) node [dipchip, num pins=65, hide numbers, no topmark, external pins width=0](chip9){};
+		\draw [rotate=360,-stealth, line width=1pt] ($(chip8.bpin 31) + (-0.5,-0.69)$) -- ++ (0.5,0);
+		\node [below, font=\scriptsize\ttfamily] at ($(chip8.bpin 31) + (-1,-0.5)$) {clk};
+		\node [right, font=\scriptsize\ttfamily, xshift=2mm] at (chip9.pin 1) {ctrl};
+		\draw[-stealth, line width=1pt] (chip9.bpin 31) -- ++ (-1.5,0) |- (chip9.bpin 31);
+		\node [below, font=\scriptsize\ttfamily] at ($(chip8.bpin 32) + (2.4,-2.14)$) {arstN};
+		\draw [rotate=180, -stealth, line width=1pt] ($(chip9.bpin 32) + (-1.4,1.6)$) -- ++ (0,-1.05);
+		\draw [rotate=180,-stealth, line width=1pt] ($(chip9.bpin 32) + (-1.4,1.8)$) -- ++ (0,-0.5);
+		\node [above, xshift=-9cm] at (chip9.north) {(tl\_fsm.sv)};
+
+		%define all the chip dimension, small chip
+		%UNDERUSED ROAD DETECTOR (c1,r0)
+		\ctikzset {multipoles/dipchip/width=2.5}
+		\draw (-6,8) node[dipchip, num pins=8, hide numbers, no topmark, external pins width=0](chip0){};
+		\node[above,align=center,anchor=south west] at (chip0.north west){(ur\_detector.sv)};
+		\node[below,align=center, font =\ttfamily] at (chip0.north){Underused\\Road Detector};
+		\node[right, font =\scriptsize\ttfamily] at
+		(chip0.bpin 3){sensor};
+		\draw (chip0.bpin 4) ++ (0, 0.1) -- ++ (0.1,-0.1) -- ++ (-0.1, -0.1);
+		\node[right, font=\scriptsize\ttfamily] at
+		([xshift=1mm] chip0.bpin 4){clk};
+		\draw [line width=1pt] (chip0.bpin 4) -- ++ (-0.4,0) -- ++ (0,-0.8) -- ++ (8.42,0);
+		\node [above, align=center, font =\scriptsize\ttfamily] at
+		(chip0.south){arstN};
+		\draw [line width=1pt] (chip0.south) -- ++ (0,-1.2) -- ++ (6.4,0)
+		node[below,ocirc] at (chip0.south){};
+		\node [left, font = \scriptsize\ttfamily] at
+		(chip0.bpin 6){ur\_list};
+
+		%combinational state logic (c1,r1)
+		\ctikzset {multipoles/dipchip/width=3.85}
+		\draw (-6,3) node [dipchip, num pins=18, hide numbers, no topmark, external pins width=0](chip1){};
+		\node[below,align=center, font =\ttfamily] at 	(chip1.north){Combinational\\Next State\\Logic};
+		\node [right, font=\scriptsize\ttfamily, yshift=-1mm] at
+		(chip1.bpin 2) {ur\_list};
+		\node [right, font=\scriptsize\ttfamily] at
+		(chip1.bpin 3){sensor};
+		\node[right, font=\scriptsize\ttfamily] at
+		(chip1.bpin 4){index};
+		\node[right, font=\scriptsize\ttfamily] at
+		(chip1.bpin 5){current\_state};
+		\node [right, font=\scriptsize\ttfamily] at
+		(chip1.bpin 7){p\_timeout};
+		\node [right, font=\scriptsize\ttfamily] at
+		(chip1.bpin 8){s\_timeout};
+		\node [left, font=\scriptsize\ttfamily] at
+		(chip1.bpin 11){counter\_set[1]};
+		\node [left, font=\scriptsize\ttfamily] at
+		(chip1.bpin 12){counter\_set[0]};
+		\node [left, font=\scriptsize\ttfamily] at
+		(chip1.bpin 13){counter\_load[1]};
+		\node [left, font=\scriptsize\ttfamily] at
+		(chip1.bpin 14){counter\_load[0]};
+		\node [left, font=\scriptsize\ttfamily] at
+		(chip1.bpin 15){next\_state};
+		\node [left, font=\scriptsize\ttfamily] at
+		(chip1.bpin 16){index\_inc};
+		\node [left, font=\scriptsize\ttfamily, yshift=-1mm] at
+		(chip1.bpin 17) {inc\_offset};
+
+		%index counter (c2,r1)
+		\ctikzset {multipoles/dipchip/width=2}
+		\draw (2,8) node [dipchip, num pins=10, hide numbers, no topmark, external pins width=0](chip2){};
+		\node[below,align=center, font =\ttfamily] at (chip2.north){Index\\Counter};
+		\node [right, font=\scriptsize\ttfamily, yshift=-2mm] at
+		(chip2.bpin 2) {offset};
+		\node [right, font=\scriptsize\ttfamily] at
+		(chip2.bpin 3) {index\_inc};
+		\draw (chip2.bpin 5) ++(00,0.1) -- ++ (0.1,-0.1)
+		node [right, font=\scriptsize\ttfamily]{clk} -- ++ (-0.1,-0.1);
+		\draw [line width=1pt] (chip2.bpin 5) -- ++ (-0.4,0) -- ++ (0,-12.8);
+		\node [circ, minimum size=3pt] at ($(chip2.bpin 5) + (-0.4,-0.52)$) {};
+		\node[above, font=\scriptsize\ttfamily] at (chip2.south){arstN};
+		\draw [line width=1pt] (chip2.south) -- ++ (0,-0.92) -- ++ (-1.6,0) -- ++ (0,-12.5)
+		node[below,ocirc] at (chip2.south){};
+		\node [circ, minimum size=3pt] at ($(chip2.bpin 5) + (-0.2,-1.2)$) {};
+		\node [left,font=\scriptsize\ttfamily] at
+		(chip2.bpin 8){index};
+
+		%state machine (c2,r2)
+		\ctikzset {multipoles/dipchip/width=2}
+		\draw (2,3.8) node [dipchip, num pins=12, hide numbers, no topmark, external pins width=0](chip3){};
+		\node[below, align=center, font =\ttfamily] at (chip3.north){State\\Memory};
+		\node [right, font=\scriptsize\ttfamily] at
+		(chip3.bpin 3) {next\_state};
+		\draw (chip3.bpin 6) ++ (0,0.1) -- ++ (0.1,-0.1) -- ++ (-0.1,-0.1);
+		\node [right, font=\scriptsize\ttfamily, xshift=1mm] at
+		(chip3.bpin 6) {clk};
+		\draw [line width=1pt] (chip3.bpin 6) -- ++ (-0.4,0) -- ++ (0,-1);
+		\node [circ, minimum size=3pt] at ($(chip3.bpin 6) + (-0.4,0)$) {};
+		\node [above,align=center,font=\scriptsize\ttfamily] at
+		(chip3.south) {arstN};
+		\draw [line width=1pt] (chip3.south) -- ++ (0,-0.7) -- ++ (-1.6,0)
+		node[below,ocirc] at (chip3.south){};
+		\node [left, font=\scriptsize\ttfamily] at
+		(chip3.bpin 9) {current\_state};
+
+		%counter.sv1 (c2,r3)
+		\ctikzset {multipoles/dipchip/width=2.5}
+		\draw (3.2,-0.8) node [dipchip, num pins=10, hide numbers, no topmark, external pins width=0](chip4){};
+		\node[above,align=center,xshift=-6mm,yshift=-1mm] at (chip4.north){(counter.sv)};
+		\node[below,align=center, font =\ttfamily] at (chip4.north){counter\_p};
+		\node [right, font=\scriptsize\ttfamily] at
+		(chip4.bpin 2) {load};
+		\node [right, font=\scriptsize\ttfamily] at
+		(chip4.bpin 3) {counter\_set};
+		\draw (chip4.bpin 5) ++ (0,0.1) -- ++ (0.1,-0.1) -- ++ (-0.1,-0.1);
+		\node [right,font=\scriptsize\ttfamily,xshift=1mm] at
+		(chip4.bpin 5) {clk};
+		\draw [line width=1pt] (chip4.bpin 5) -- ++ (-1.25,0);
+		\node [circ, minimum size=3pt] at ($(chip4.bpin 5) + (-1.25,0)$) {};
+		\node [above, font=\scriptsize\ttfamily] at
+		(chip4.south) {arstN};
+		\draw [line width=1pt] (chip4.south) -- ++ (0,-0.6) -- ++ (-2.85,0)
+		node[below,ocirc] at (chip4.south){};
+		\node [circ, minimum size=3pt] at ($(chip3.bpin 6) + (-0.22,-0.98)$) {};
+		\node [circ, minimum size=3pt] at ($(chip4.bpin 5) + (-1.05,-0.88)$) {};
+		\node [left, font=\scriptsize\ttfamily] at
+		(chip4.bpin 9) {flag\_0};
+
+		%counter.sv1 (c2,r4)
+		\ctikzset {multipoles/dipchip/width=2.5}
+		\draw (3.2,-5) node [dipchip, num pins=10, hide numbers, no topmark, external pins width=0](chip5){};
+		\node[above,align=center,xshift=-6mm,yshift=-1mm] at (chip5.north){(counter.sv)};
+		\node[below,align=center, font =\ttfamily] at (chip5.north){counter\_s};
+		\node [right, font=\scriptsize\ttfamily] at
+		(chip5.bpin 2) {load};
+		\node [right, font=\scriptsize\ttfamily] at
+		(chip5.bpin 3) {counter\_set};
+		\draw (chip5.bpin 5) ++ (0,0.1) -- ++ (0.1,-0.1) -- ++ (-0.1,-0.1);
+		\node [right,font=\scriptsize\ttfamily,xshift=1mm] at
+		(chip5.bpin 5) {clk};
+		\draw [line width=1pt] (chip5.bpin 5) -- ++ (-0.55,0) |- (chip9.bpin 31);
+		\node [circ, minimum size=3pt] at ($(chip5.bpin 5) + (-1.25,0.15)$) {};
+		\node [above, font=\scriptsize\ttfamily] at
+		(chip5.south) {arstN};
+		\draw [line width=1pt] (chip5.south) -- ++ (0,-0.4) -- ++ (-11.53,0) -- ++ (0,-0.3)
+		node[below,ocirc] at (chip5.south){};
+		\node [circ, minimum size=3pt] at ($(chip5.bpin 5) + (-1.05,-0.68)$) {};
+		\node [left, font=\scriptsize\ttfamily] at
+		(chip5.bpin 9) {flag\_0};
+
+		%combinational output signal (c3,r1)
+		\ctikzset {multipoles/dipchip/width=2.3}
+		\draw (7.8,4.1) node [dipchip, num pins=15, hide numbers, no topmark, external pins width=0](chip6){};
+		\node[below,align=center, font = \ttfamily] at (chip6.north){Combinational\\Output Logic};
+		\node [right, font=\scriptsize\ttfamily] at
+		(chip6.bpin 5) {current\_state};
+		\node [left, font=\scriptsize\ttfamily] at
+		(chip6.bpin 9) {tl\_signal};
+
+		%combinational interpreter (c4,r1)
+		\ctikzset {multipoles/dipchip/width=2}
+		\draw (11.8,4.5) node [dipchip, num pins=15, hide numbers, no topmark, external pins width=0](chip7){};
+		\node[below,align=center, font=\ttfamily] at (chip7.north){Combinational\\Interpreter};
+		\node [right, font=\scriptsize\ttfamily, yshift=1mm] at
+		(chip7.bpin 3) {index};
+		\node [left, font=\scriptsize\ttfamily] at
+		(chip7.bpin 12) {tl\_sig\_arr[0]};
+		\node [left, font=\scriptsize\ttfamily] at
+		(chip7.bpin 11) {tl\_sig\_arr[1]};
+		\node [left, font=\scriptsize\ttfamily] at
+		(chip7.bpin 10) {tl\_sig\_arr[2]};
+		\node [left, font=\scriptsize\ttfamily] at
+		(chip7.bpin 9) {tl\_sig\_arr[3]};
+
+		%Traffic D
+		\draw[-stealth, line width=1pt] (chip7.bpin 9) |- (chip8.bpin 55);
+		\draw[-stealth, line width=1pt] (chip8.bpin 55) --  ++ (2.5,0) -- ++ (0,-3) -- ++ (1,0)
+		node[below left, font=\scriptsize\ttfamily] at ($(chip8.bpin 55) + (3.1,-3)$) {tl\_sig\_arr[3][2:0]}
+		node [right, align=left, font=\ttfamily] {(to Traffic Light D\\light simulation)};
+		\draw ($(chip8.bpin 55) + (1,-0.2)$) -- ++(0.5,0.5);
+		\node[right, font=\ttfamily] at ($(chip8.bpin 55) + (1,0.3)$) {3};
+		%Traffic C
+		\draw[-stealth, line width=1pt] (chip7.bpin 11) |- (chip8.bpin 57);
+		\draw[-stealth, line width=1pt] (chip8.bpin 56) --  ++ (3,0) -- ++ (0, -2) -- ++ (0.5,0)
+		node[right, font=\scriptsize\ttfamily] at ($(chip8.bpin 56) + (3,-0.5)$) {tl\_sig\_arr[2][2:0]}
+		node [right, align=left, font=\ttfamily] {(to Traffic Light C\\light simulation)};
+		\draw ($(chip8.bpin 56) + (1,-0.2)$) -- ++(0.5,0.5);
+		\node[right, font=\ttfamily] at ($(chip8.bpin 56) + (1,0.3)$) {3};
+		%Traffic B
+		\draw[-stealth, line width=1pt] (chip7.bpin 10) |- (chip8.bpin 56);
+		\draw[-stealth, line width=1pt] (chip8.bpin 57) --  ++ (3,0) -- ++ (0,2) -- ++ (0.5,0)
+		node[right, font=\scriptsize\ttfamily] at ($(chip8.bpin 57) + (3,0.5)$) {tl\_sig\_arr[1][2:0]}
+		node [right, align=left, font=\ttfamily] {(to Traffic Light B\\light simulation)};
+		\draw ($(chip8.bpin 57) + (1,-0.2)$) -- ++(0.5,0.5);
+		\node[right, font=\ttfamily] at ($(chip8.bpin 57) + (1,0.3)$) {3};
+		%Traffic A
+		\draw[-stealth, line width=1pt] (chip7.bpin 12) |- (chip8.bpin 58);
+		\draw[-stealth, line width=1pt] (chip8.bpin 58) --  ++ (2.5,0) -- ++ (0,3) -- ++ (1,0)
+		node [above left, font=\scriptsize\ttfamily] at ($(chip8.bpin 58) + (3.2,3)$) {tl\_sig\_arr[0][2:0]}
+		node [right, align=left, font=\ttfamily] {(to Traffic Light A\\light simulation)};
+		\draw ($(chip8.bpin 58) + (1,-0.2)$) -- ++(0.5,0.5);
+		\node[right, font=\ttfamily] at ($(chip8.bpin 58) + (1,0.3)$) {3};
+
+		%Connection c1 to c2
+		%ur_list
+		\draw[-stealth, line width=1pt] (chip0.bpin 6) -- ++ (1.5,0) -- ++ (0,-1.8) -- ++ (-6.8,0) -- ++ (0, -1) |- (chip1.bpin 2);
+		\draw ($(chip0.bpin 6) + (1.25,-1)$) -- ++(0.5,0.5);
+		\node[right, font=\ttfamily] at ($(chip0.bpin 6) + (1.6,-0.8)$) {4};
+		\node [above, font=\scriptsize\ttfamily] at ($(chip0.bpin 6) + (1.2,0)$) {ur\_list[3:0]};
+		%sensor arrow
+		\draw[-stealth, line width=1pt] (chip9.bpin 13) -- ++ (-2,0) |- (chip9.bpin 13);
+		\draw ($(chip9.bpin 13) + (-1,-0.3)$) -- ++(0.5,0.5);
+		\draw [rotate=360,-stealth, line width=1pt] ($(chip9.bpin 13) + (-1.9,0)$) -- ++ (0.5,0);
+		\node [below, font=\scriptsize\ttfamily] at ($(chip8.bpin 13) + (-1,-0.75)$) {sensor[3:0]};
+		\node[right, font=\ttfamily] at ($(chip9.bpin 13) + (-1,0.3)$) {4};
+		\draw[-stealth, line width=1pt] (chip8.bpin 14) |- (chip9.bpin 13);
+		\draw [-stealth, line width=1pt] (chip9.bpin 13) |- (chip1.bpin 3);
+
+		%sensor (c1, c0)
+		\draw [-stealth, line width=1pt] (chip1.bpin 3) -- ++ (-0.5,0) |- (chip0.bpin 3);
+		%inc_offset (c1, c2)
+		\draw [-stealth, line width=1pt] (chip1.bpin 17) -- ++ (3.2,0) |- (chip2.bpin 2);
+		\draw ($(chip1.bpin 17) + (3.3,3.65)$) -- ++ (0.4,0.4);
+		\node[right, font=\ttfamily] at ($(chip1.bpin 17) + (3.3,4.2)$) {2};
+		\node [above, font=\scriptsize\ttfamily] at ($(chip1.bpin 17) + (1.4,0)$) {inc\_offset[1:0]};
+		%index_inc (c1, c2)
+		\draw [-stealth, line width=1pt] (chip1.bpin 16) -- ++ (2.7,0) |- (chip2.bpin 3);
+		\node [above, font=\scriptsize\ttfamily] at ($(chip1.bpin 16) + (0.8,0)$) {index\_inc};
+		%next_state (c1, c3)
+		\draw [-stealth, line width=1pt] (chip1.bpin 15) -- ++ (3,0) |- (chip3.bpin 3);
+		\node [above, font=\scriptsize\ttfamily] at ($(chip1.bpin 15) + (1.4,0)$) {next\_state[1:0]};
+		%counter_load[0] (c1,c4)
+		\draw [-stealth, line width=1pt] (chip1.bpin 14) -- ++ (3.4,0) |- (chip4.bpin 2);
+		\draw ($(chip4.bpin 2) + (-0.7,-0.3)$) -- ++(0.5,0.5);
+		\node[right, font=\ttfamily] at ($(chip4.bpin 2) + (-0.9,0.4)$) {16};
+		\node [above, font=\scriptsize\ttfamily] at ($(chip1.bpin 14) + (1.75,0)$) {counter\_load[0][15:0]};
+		%counter_load[1] (c1, c5)
+		\draw [-stealth, line width=1pt] (chip1.bpin 13) -- ++ (2.7,0) |- (chip5.bpin 2);
+		\draw ($(chip5.bpin 2) + (-0.8,-0.25)$) -- ++(0.45,0.45);
+		\node[right, font=\ttfamily] at ($(chip5.bpin 2) + (-0.9,0.4)$) {16};
+		\node [above, font=\scriptsize\ttfamily] at ($(chip1.bpin 13) + (1.75,0)$) {counter\_load[1][15:0]};
+		%counter_set[0] (c1, c4)
+		\draw [-stealth, line width=1pt] (chip1.bpin 12) -- ++ (2.3,0) |- (chip4.bpin 3);
+		\node [above, font=\scriptsize\ttfamily] at ($(chip1.bpin 12) + (1.2,0)$) {counter\_set[0]};
+		%counter_set[1] (c1, c5)
+		\draw [-stealth, line width=1pt] (chip1.bpin 11) -- ++ (1.5,0) |- (chip5.bpin 3);
+		\node [above, font=\scriptsize\ttfamily] at ($(chip1.bpin 11) + (1.2,0)$) {counter\_set[1]};
+		%currrent_state (c3, c6)
+		\draw [-stealth, line width=1pt] (chip3.bpin 9) |- (chip6.bpin 5);
+		\draw ($(chip3.bpin 9) + (0.55,-0.8)$) -- ++(0.5,0.5);
+		\node[right, font=\ttfamily] at ($(chip3.bpin 9) + (1,-0.5)$) {2};
+		\node [above, font=\scriptsize\ttfamily] at ($(chip3.bpin 9) + (1.42,0.3)$) {current\_state[1:0]};
+		%current_state (c3, c1)
+		\draw [-stealth, line width=1pt] (chip3.bpin 9) |- (chip6.bpin 5)-- ++ (-2,0) -- ++ (0,-2.62) -- ++ (-6.8,0) -- ++ (0,-1.5) -- ++ (-6.8,0) |- (chip1.bpin 5);
+		%p_timeout (c4, c1)
+		\draw [-stealth, line width=1pt] (chip4.bpin 9) -- ++ (1,0) -- ++ (0,-2.7) -- ++ (-15,0) |- (chip1.bpin 7);
+		\node [above, font=\scriptsize\ttfamily] at ($(chip4.bpin 9) + (1,0)$) {p\_timeout};
+		%s_timeout (c5, c1)
+		\draw [-stealth, line width=1pt] (chip5.bpin 9) -- ++ (0.8,0) -- ++ (0,-2.5) -- ++ (-15,0) |- (chip1.bpin 8);
+		\node [above, font=\scriptsize\ttfamily] at ($(chip5.bpin 9) + (1,0)$) {s\_timeout};
+		%index (c2, c7)
+		\draw [-stealth, line width=1pt] (chip2.bpin 8) -- ++ (6.6,0);
+		%index (c2, c7)
+		\draw [-stealth, line width=1pt] (chip2.bpin 8) -- ++ (6.8,0) |- (chip7.bpin 3);
+		\node [above, font=\scriptsize\ttfamily] at ($(chip2.bpin 8) + (7.7,-0.3)$) {index[1:0]};
+		\draw [-stealth, line width=1pt] (chip2.bpin 8) -- ++ (2,0) -- ++ (0,2) -- ++ (-14.8,0) |- (chip1.bpin 4);
+		\draw ($(chip2.bpin 8) + (0.6,-0.3)$) -- ++(0.5,0.5);
+		\node[right, font=\ttfamily] at ($(chip2.bpin 8) + (0.6,0.3)$) {2};
+		\node [below, font=\scriptsize\ttfamily] at ($(chip2.bpin 8) + (1,-0.3)$) {index[1:0]};
+		%tl_signal (c6. c7)
+		\draw [-stealth, line width=1pt] (chip6.bpin 9) -- ++ (0.5,0) |- (chip7.bpin 7);
+		\draw ($(chip6.bpin 9) + (0.5,-0.1)$) -- ++(0.4,0.4);
+		\node[right, line width=1pt,font=\ttfamily] at ($(chip6.bpin 9) + (0.55,0.5)$) {3};
+		\node [right, font=\scriptsize\ttfamily] at ($(chip6.bpin 9) + (1,0)$) {tl\_signal};
+	\end{circuitikz}
+}
+\egroup

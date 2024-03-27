@@ -2,6 +2,13 @@
 \begin{appendices}
 	\addtocontents{toc}{\protect\setlength{\cftsecnumwidth}{1.5em}}
 	\titleformat{\section}{\normalfont\Large\bfseries}{Appendix~\Alph{section}}{1em}{}
+	\section{\acs{tlcs} Block Diagram\label{app:tlcsbd}}
+	\vspace{-1cm}
+	\smash
+	{\begin{minipage}[t][][b]{\linewidth}
+			\include{tlcsbd.tex}
+		\end{minipage}}
+	\clearpage
 	\section{\acs{rtl} Synthesis: Expanded Netlist View in Quartus Prime}\label{app:rtl}
 	Due to paper size and resolution limitations, this expanded netlist diagram is better viewed in softcopy for full uncompromised resolution.
 
@@ -19,6 +26,7 @@
 				}
 		]{appendix/block diagram-crop.pdf}
 	\end{minipage}
+	\clearpage
 	% \includepdf[
 	% 	frame,
 	% 	scale=0.75,
