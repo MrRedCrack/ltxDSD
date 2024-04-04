@@ -79,19 +79,41 @@ As illustrated in Figure~\ref{fig:intersection}, it is assumed there are four ro
 \subsection{System Behavior Design Plan\label{section:behavior_plan}}
 Due to the assumption that opposite lanes in all directions are accessible from any road at the intersection during its green-light phase, it is implied that throughout the green-light until red-light phase of any particular road, all other roads must stay in the red-light phase to avoid traffic conflict.
 \subsubsection{Normal Operation}
-When all four roads are busy, the traffic lights should cycle through their phases one by one and update according to their set default (primary) durations of each light phase to keep the timings fair. The default durations for roads $A,B,C,D$ are as follows, and further expressed in (\ref{eq:normalop}):
+When all four roads are busy, the traffic lights should cycle through their phases one by one and update according to their set default (primary) durations of each light phase to keep the timings fair. The default durations for roads $A,B,C,D$ are as follows, and illustrated in Table~\ref{tab:normalop}.
 \begin{itemize}
 	\item Green-light phase ($G$): 30\unit{\second}
 	\item Yellow-light phase ($Y$): 3\unit{\second}
 	\item All-Red phase ($R$): 3\unit{\second}
 \end{itemize}
-\begin{align}
-	G_n\xrightarrow{30\unit{\second}}Y_n\xrightarrow{3\unit{\second}}R_n\xrightarrow{3\unit{\second}}G_{n+1}\xrightarrow{30\unit{\second}}\dots,\quad{}n\in\{A,B,C,D\} \label{eq:normalop}
-\end{align}
+% \begin{align}
+% 	G_n\xrightarrow{30\unit{\second}}Y_n\xrightarrow{3\unit{\second}}R_n\xrightarrow{3\unit{\second}}G_{n+1}\xrightarrow{30\unit{\second}}\dots,\quad{}n\in\{A,B,C,D\} \label{eq:normalop}
+% \end{align}
+\begin{table}[H]
+	\caption{\acs{tlcs} normal operation sequence generalization.\label{tab:normalop}}
+	\centering
+	\setlength\tabcolsep{9pt}
+	\begin{NiceTabular}[t]{ccccc}
+		\toprule
+		\multicolumn{4}{c}{Light Status} & \Block{2-1}{Duration (\si\second)}                                \\
+		\cmidrule{1-4}
+		Road $A$                         & Road $B$                           & Road $C$ & Road $D$ &        \\
+		\midrule
+		$G$                              & $R$                                & $R$      & $R$      & 30     \\
+		$Y$                              & $R$                                & $R$      & $R$      & 3      \\
+		$R$                              & $R$                                & $R$      & $R$      & 3      \\
+		$R$                              & $G$                                & $R$      & $R$      & 30     \\
+		\vdots                           & \vdots                             & \vdots   & \vdots   & \vdots \\
+		$R$                              & $R$                                & $R$      & $Y$      & 3      \\
+		$R$                              & $R$                                & $R$      & $R$      & 3      \\
+		$G$                              & $R$                                & $R$      & $R$      & 30     \\
+		\vdots                           & \vdots                             & \vdots   & \vdots   & \vdots \\
+		\bottomrule
+	\end{NiceTabular}
+\end{table}
 \subsubsection{Low Car Density Detection}
 The green light phase on roads that are detected to be not so busy can be skipped forward after its minimum duration (determined by the low car density timeout duration; 5\si{\second}) to allow traffic for the next road. So, within the entire green-light phase, whenever the sensor at the green-light road has detected no car for 5\unit{\second}, the system shall immediately skip to the yellow-light phase and continue with the normal operation phase durations until the next green-light phase.
 \begin{align}
-	G_n\xrightarrow[5\unit{\second}\text{ w/ no car}]{\text{max }30\unit{\second}}Y_n\xrightarrow{3\unit{\second}}\dots
+	G_n\xrightarrow[5\unit{\second}\text{ w/ no car on road $n$}]{\text{max }30\unit{\second}}Y_n\xrightarrow{3\unit{\second}}\dots
 \end{align}
 \subsubsection{Underused Road Detection}
 Underused roads that have been empty for a long time can be ignored by the system to minimize redundant green-light phases. At any point during system operation, if a road has had no car detected for at least 30\unit{\second} or since system initialisation, the road is closed off during its red-light phase (then kept in red-light phase) indefinitely or until the next time a car is detected on that road. If there is only one or no road left active with cars passing through, the last road in green-light phase will be stuck in green-light phase indefinitely or until the next time a different road is reopened by a car detection.
