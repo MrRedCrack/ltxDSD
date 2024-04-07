@@ -46,4 +46,9 @@ for (logic [1:0] i = index + 1'b1, j = '0;
 end
 \end{minted}
 \end{code}
-After refactoring the source code to work around the oddities of the Quartus compiler as discussed above, there were no remaining unexpected warnings or errors, and the generated netlist was within expectations and resembled the planned logic block diagram (example shown in Appendix~\ref{app:rtl}).
+After refactoring the source code to work around the oddities of the Quartus compiler as discussed above, there were no remaining unexpected warnings or errors, and the generated netlist was within expectations and resembled the planned logic block diagram (example shown in Appendix~\ref{app:rtl}). Only the fundamental Lights \ac{fsm} was expressed as a \ac{fsm} block by Quartus (Figure~\ref{fig:lightsfsmquartus}) as it was the only \ac{fsm} that had all of its states explicitly and individually defined, rather than implemented with generalization via arithmetic operations for state transitions.
+\begin{figure}[H]
+	\centering
+	\fbox{\includegraphics[width=.98\textwidth]{lights fsm.png}}
+	\caption{Synthesized Lights \acs{fsm} in Quartus.\label{fig:lightsfsmquartus}}
+\end{figure}

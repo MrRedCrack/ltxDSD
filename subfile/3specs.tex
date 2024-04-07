@@ -1,1 +1,253 @@
 \section{Specifications}
+Traffic light controller ensures safe and smooth traffic flow by controlling the sequencing of traffic lights based on the time of day and road traffic circumstances, as well as performing advanced traffic control to eliminate traffic congestion. The controller receives the input from sensors detecting vehicle presence and outputs signals to simulate the behavior of traffic lights at four different lanes $A$, $B$, $C$, and $D$.
+
+\subsection{Timer Management}
+The Traffic Light Controller module operates based on a clock cycle of 10Hz. The duration of each phase in the traffic light sequence is incorporated with the module timers, and they are responsible for tracking the elapsed time within each phase to ensure the transition between phases seamlessly.  This \acs{tlcs} operates dynamically because a sensor is used to identify the presence of vehicle at each lane, and prioritize lanes based on traffic condition in real-time. In reality, the \acs{tlcs} checks the condition of each lane, and if one lane has no vehicles waiting at the traffic light while another lane does, the \acs{tlcs} will change the traffic light sequence to the lane with waiting vehicles. Hence, the TLC effectively mitigates traffic congestion by continuously monitoring road conditions.
+
+\acs{tlcs} manages timers to control the duration of each phase in the traffic light sequence. The traffic light sequence consists of $Green$ $(G)$, $Yellow$ $(Y)$, and $Red$ $(R)$ phases. The controller transitions between phases according to predefined time intervals, adhering to traffic regulations. For instance, the green phase has a longer duration to allow the maximum number of vehicles passing through the intersection. However, yellow and all-red intervals are intended as a margin of safety. A yellow change interval should not be less than 3 seconds, and this interval provides drivers with a buffer period to react and safely slower down their speed or stop before the light changes to red. Furthermore, an all-red interval guarantees that all vehicles are safely cleared from the intersection before traffic from alternate starts moving again.
+
+\subsection{Input/Output Interfaces}
+
+\begin{figure}[H]
+	\setstretch{1}
+	\centering
+	\begin{circuitikz}
+		\ctikzset {multipoles/dipchip/width=4}
+		\draw (1,1) node [dipchip, num pins=20, hide numbers, no topmark, external pins width=0](tlc){};
+		\node[below,align=center, font =\ttfamily] at (tlc.north){Traffic Light\\ Controller};
+		\node [above, xshift=-2cm] at (tlc.north) {(main.sv)};
+		\draw [-stealth, line width=1pt] (tlc.bpin 4) -- ++ (-1.5,0) |- (tlc.bpin 4);
+		\draw ($(tlc.bpin 4) + (-1.2,-0.2)$) -- ++(0.5,0.5);
+		\node[right, font=\ttfamily] at ($(tlc.bpin 4) + (-1.2,0.5)$) {4};
+		\node [left, font=\footnotesize\ttfamily] at ($(tlc.bpin 4) + (-1.5,0)$) {sensor[3:0]};
+		\node [right, font=\footnotesize\ttfamily] at (tlc.bpin 4) {sensor};
+		\draw (tlc.bpin 9) ++ (0,0.3) -- ++ (0.3,-0.3) -- ++ (-0.3,-0.3);
+		\node [right,font=\footnotesize\ttfamily,xshift=3mm] at
+		(tlc.bpin 9) {clk};
+		\draw [-stealth, line width=1pt] (tlc.bpin 9) -- ++ (-1.5,0) |- (tlc.bpin 9);
+		\draw (tlc.south) ++ (0,-0.1) circle [radius=0.1, line width=1pt];
+		\node[above, font=\ttfamily] at (tlc.south){arstN};
+		\draw [rotate=180, -stealth, line width=1pt] ($(tlc.bpin 9) + (-2.8,2.55)$) -- ++ (0,-1.5);
+		\node [left, font=\footnotesize\ttfamily] at
+		(tlc.bpin 17) {tl\_sig\_arr[0]};
+		\draw[-stealth, line width=1pt] (tlc.bpin 17) --  ++ (1.5,0);
+		\node[right, font=\footnotesize\ttfamily] at ($(tlc.bpin 17) + (1.6,0)$) {tl\_sig\_arr[0][2:0]};
+		\draw ($(tlc.bpin 17) + (0.75,-0.2)$) -- ++ (0.5,0.5);
+		\node[right, font=\ttfamily] at ($(tlc.bpin 17) + (0.35,0.4)$) {3};
+		\node [left, font=\footnotesize\ttfamily] at
+		(tlc.bpin 16) {tl\_sig\_arr[1]};
+		\draw[-stealth, line width=1pt] (tlc.bpin 16) --  ++ (1.5,0);
+		\node[right, font=\footnotesize\ttfamily] at ($(tlc.bpin 16) + (1.6,0)$) {tl\_sig\_arr[1][2:0]};
+		\draw ($(tlc.bpin 16) + (0.7,-0.2)$) -- ++ (0.5,0.5);
+		\node[right, font=\ttfamily] at ($(tlc.bpin 16) + (0.35,0.25)$) {3};
+		\node [left, font=\footnotesize\ttfamily] at
+		(tlc.bpin 15) {tl\_sig\_arr[2]};
+		\draw[-stealth, line width=1pt] (tlc.bpin 15) --  ++ (1.5,0);
+		\node[right, font=\footnotesize\ttfamily] at ($(tlc.bpin 15) + (1.6,0)$) {tl\_sig\_arr[2][2:0]};
+		\draw ($(tlc.bpin 15) + (0.75,-0.2)$) -- ++ (0.5,0.5);
+		\node[right, font=\ttfamily] at ($(tlc.bpin 15) + (0.35,0.25)$) {3};
+		\node [left, font=\footnotesize\ttfamily] at
+		(tlc.bpin 14) {tl\_sig\_arr[3]};
+		\draw[-stealth, line width=1pt] (tlc.bpin 14) --  ++ (1.5,0);
+		\node[right, font=\footnotesize\ttfamily] at ($(tlc.bpin 14) + (1.6,0)$) {tl\_sig\_arr[3][2:0]};
+		\draw ($(tlc.bpin 14) + (0.75,-0.2)$) -- ++ (0.5,0.5);
+		\node[right, font=\ttfamily] at ($(tlc.bpin 14) + (0.35,0.25)$) {3};
+
+	\end{circuitikz}
+	\caption{Traffic Light Controller Block Diagram\acs{tlcs}.\label{fig:tlc_fsm}}
+	\par
+\end{figure}
+
+The \acs{tlcs} block diagram illustrates multiple input and output ports. The input ports include \texttt{sensor[3:0]}, \texttt{clk}, and \texttt{arstN}, while the output ports are include \texttt{tl\_sig\_arr[0]}, \texttt{tl\_sig\_arr[1]}, \texttt{tl\_sig\_arr[2]}, \texttt{tl\_sig\_arr[3]}, which are linked to traffic light simulations A through D. The detailed explanation will be covered in next section (As shown in Appendix~\ref{app:tlcsbd}).
+\subsubsection{Input Interface: \texttt{sensor[3:0]}}
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}
+		\tikzset{
+			block/.style={draw, minimum width=2cm, minimum height=1cm},
+		}
+		\matrix (rect) [matrix of nodes, nodes in empty cells, row sep=-\pgflinewidth, column sep=-\pgflinewidth] {
+		|[block]| 11 & |[block]| 10 & |[block]| 01 & |[block]|  00 \\
+		};
+		\node[above] at (rect-1-1.north) {MSB};
+		\node[above] at (rect-1-4.north) {LSB};
+		\node[below] at (rect-1-1.south) {Lane D};
+		\node[below] at (rect-1-2.south) {Lane C};
+		\node[below] at (rect-1-3.south) {Lane B};
+		\node[below] at (rect-1-4.south) {Lane A};
+	\end{tikzpicture}
+	\caption{\texttt{sensor[3:0]} 4-bit binary number representation}
+	\label{block:sync1}
+	\par
+\end{figure}
+The sensor[3:0] interface represents data inputs from sensors deployed across different lanes of the intersection.
+Each bit corresponds to a specific lane of the traffic light:
+
+\begin{itemize}
+
+	\item \textbf{Lane A (Index 0):} Sensor bit 0
+	\item \textbf{Lane B (Index 1):} Sensor bit 1
+	\item \textbf{Lane C (Index 2):} Sensor bit 2
+	\item \textbf{Lane D (Index 3):} Sensor bit 3
+
+\end{itemize}
+
+When any bit in the \texttt{sensor[3:0]} interfaces is set to 1, it indicates that a car is detected in the corresponding lane. For example, if \texttt{sensor[0]} is set to 1, it indicates that there is a vehicle in Lane A. Similarly, if \texttt{sensor[2]} is set to 1, it means that a vehicle was detected in Lane C. In a given scenario, when both \texttt{sensor[0]} and \texttt{sensor[2]} are simultaneously set to 1, it shows that vehicles have been detected in both Lane A and Lane C at the same time.
+
+\subsubsection{Input Interface: \texttt{clk}}
+Clock signal is used to synchronize the operation of the \acs{tlcs}, so that it can performs transitions from green phase to yellow phase and subsequently to red phase based on their predetermined durations, all of which occur after a specific number of time units at the clock edge.
+
+\subsubsection{Input Interface: \texttt{arstN}}
+Asynchronous reset (\texttt{arstN}) signal is an active-low reset which means that the reset signal is asserted when it is at low voltage level, typically logic 0. Unlike a synchronous reset, which relies on the active clock to ensure that the reset timing occurs at a predictable time relative to the clock signal, an asynchronous reset operates independently of the clock because the reset is not synchronized to clock so reset occurs immediately upon the assertion of the reset signal, and there is no need to wait for the next clock edge to reset. Hence, asynchronous reset has a lower latency than a synchronous reset.
+
+\subsubsection{Output Interface: \texttt{tl\_sig\_arr}}
+
+\begin{figure}[H]
+	\centering
+	\begin{tikzpicture}
+		\tikzset{
+			block/.style={draw, minimum width=2cm, minimum height=1cm},
+		}
+		\matrix (arr0) [matrix of nodes, nodes in empty cells, row sep=-\pgflinewidth, column sep=-\pgflinewidth] {
+		|[block]| 10 & |[block]| 01 & |[block]|  00 \\
+		};
+		\node[left] at (arr0-1-1.west) {tl\_sig\_arr[0]};
+		\draw[->] (arr0-1-3.east) -- ($(arr0-1-3.east) + (1,0)$);
+		\node [right] at ($(arr0-1-3.east) + (1,0)$) {to Traffic Light A simulation};
+		\node[below] at (arr0-1-1.south) {Red};
+		\node[below] at (arr0-1-2.south) {Yellow};
+		\node[below] at (arr0-1-3.south) {Green};
+
+		\matrix (arr1) [below=of arr0, matrix of nodes, nodes in empty cells, row sep=-\pgflinewidth, column sep=-\pgflinewidth] {
+		|[block]| 10 & |[block]| 01 & |[block]|  00 \\
+		};
+		\node[left] at (arr1-1-1.west) {tl\_sig\_arr[1]};
+		\draw[->] (arr1-1-3.east) -- ($(arr1-1-3.east) + (1,0)$);
+		\node [right] at ($(arr1-1-3.east) + (1,0)$) {to Traffic Light B simulation};
+		\node[below] at (arr1-1-1.south) {Red};
+		\node[below] at (arr1-1-2.south) {Yellow};
+		\node[below] at (arr1-1-3.south) {Green};
+
+		\matrix (arr2) [below=of arr1, matrix of nodes, nodes in empty cells, row sep=-\pgflinewidth, column sep=-\pgflinewidth] {
+		|[block]| 10 & |[block]| 01 & |[block]|  00 \\
+		};
+		\node[left] at (arr2-1-1.west) {tl\_sig\_arr[2]};
+		\draw[->] (arr2-1-3.east) -- ($(arr2-1-3.east) + (1,0)$);
+		\node [right] at ($(arr2-1-3.east) + (1,0)$) {to Traffic Light C simulation};
+		\node[below] at (arr2-1-1.south) {Red};
+		\node[below] at (arr2-1-2.south) {Yellow};
+		\node[below] at (arr2-1-3.south) {Green};
+
+		\matrix (arr3) [below=of arr2, matrix of nodes, nodes in empty cells, row sep=-\pgflinewidth, column sep=-\pgflinewidth] {
+		|[block]| 10 & |[block]| 01 & |[block]|  00 \\
+		};
+		\node[left] at (arr3-1-1.west) {tl\_sig\_arr[3]};
+		\draw[->] (arr3-1-3.east) -- ($(arr3-1-3.east) + (1,0)$);
+		\node [right] at ($(arr3-1-3.east) + (1,0)$) {to Traffic Light D simulation};
+		\node[below] at (arr3-1-1.south) {Red};
+		\node[below] at (arr3-1-2.south) {Yellow};
+		\node[below] at (arr3-1-3.south) {Green};
+	\end{tikzpicture}
+	\caption{3-bit representation of \texttt{tl\_sig\_arr}: Output for Traffic Light Simulations}
+	\label{block:sync2}
+	\par
+\end{figure}
+The \texttt{tl\_sig\_arr} array is an output array that contains the signal for a specific lane light simulation. The index of \texttt{tl\_sig\_arr} indicates that the signal encodes the current status of the traffic light simulation. As illustrated in Figure~\ref{block:sync2},  \texttt{tl\_sig\_arr[0]} corresponds to Lane A's traffic light, \texttt{tl\_sig\_arr[1]} to Lane B's traffic light, \texttt{tl\_sig\_arr[2]} to Lane C's traffic light, and \texttt{tl\_sig\_arr[3]} to Lane D's traffic light. The three bits in the \texttt{tl\_sig\_arr} element represent the status light of the appropriate lane: the most significant bit (MSB) denotes a red light, ‘10’ indicates a yellow light, and the least significant bit indicates a green light.
+\begin{listing}[H]
+	\caption{State machine output interpreter logic.\label{code:interpreter}}
+	\begin{minted}{systemverilog}
+always_comb begin // interpret state machine outputs 
+                  // and output to tl_sig_arr
+    for (int i = 0; i < 4; i++) tl_sig_arr[i] = '0; // default to '0
+    if (|tl_signal) begin // detect light signal available
+        for (int i = 0; i < 4; i++) begin
+        tl_sig_arr[i] = 3'b100; // default to red
+        if (i[1:0] == index) tl_sig_arr[i] = tl_signal;
+        end
+    end
+end
+\end{minted}
+\end{listing}
+The source code provided above interprets the outputs of a state machine and updates the value in the \texttt{tl\_sig\_arr} array. All the elements in \texttt{tl\_sig\_arr} are set to 0 initially where all the traffic lights are off. Next, when \texttt{tl\_signal} is active, all the traffic lights are defaulted to stay at red light, which is encoded as 3’b100. Then, by comparing the \texttt{index} of the loop within the \texttt{index}, the appropriate traffic light’s status is updated based on the corresponding signal from \texttt{tl\_signal}.
+\newpage
+\subsection {Naming Convention}
+The table below contains a selection of identifiers retrieved from our source codes.
+\begin{table}[H]
+	\centering
+	\setlength{\arrayrulewidth}{0.5mm}
+	\setlength{\tabcolsep}{18pt}
+	\renewcommand{\arraystretch}{1.5}
+	\begin{tabular}{ |p{3cm}|p{3cm}|p{4cm}| }
+		\hline
+		\textbf{Formatting} & \textbf{Example(s)}                          & \textbf{Description}                                                      \\
+		\hline
+		snake\_case         & tl\_a, tl\_b, tl\_c, tl\_d                   & Used for variables, nets, and signal names.                               \\
+		\hline
+		UPPERCASE           & ALLOFF, G, Y, R                              & Used for enum values                                                      \\
+		\hline
+		ALL\_CAPS           & G\_SCALE\_P, G\_SCALE\_S, Y\_SCALE, R\_SCALE & Used for parameter names or constant                                      \\
+		\hline
+		append ‘N’          & arstN                                        & Active-low signal are denoted by appending ‘N’ to the end of their names. \\
+		\hline
+		append ‘\_t’        & tl\_state\_t                                 & Used for typedef names.                                                   \\
+		\hline
+	\end{tabular}
+	\caption{Naming Conventions for identifiers from our source codes.}
+	\label{tab:identifiers}
+\end{table}
+The purpose of using a naming convention is to reduce the effort required by programmers when reading and understanding the source code. By adhering to consistent naming standards, developers can conduct code reviews more efficiently, because now they can focus on issues that are more important than syntax and naming standards. Moreover, naming conventions contribute to improved readability by employing clear and descriptive names, which enhance programmers' comprehension of the code. Furthermore, they ensure consistency across the codebase, facilitating easier understanding of each other's code. It is encouraged to use descriptive names such as \texttt{‘tl\_a’} to indicate the traffic light at Lane A, instead of using generic ‘a’ to represent traffic light at Lane A.
+\newpage
+\subsection{Functionality and Behavior}
+
+\begin{figure}[htpb]
+	\begin{tikzpicture}
+		\tikzset{
+			trafficlight/.style = {%
+					matrix of nodes,
+					nodes in empty cells,
+					rounded corners,
+					draw = black!80,
+					fill = black,
+					scale=0.5,
+					nodes = {scale=2,circle, minimum size=1pt, anchor=center, draw=black},
+					row sep=0.5mm
+				}
+		}
+		\matrix[trafficlight,
+			row 1/.style={nodes={fill=red}},
+			row 2/.style={nodes={fill=black!70}},
+			row 3/.style={nodes={fill=black!70}}] (tl1) {
+			\\
+			\\
+			\\
+		};
+		\node[right,text width=12cm, align=justify] at ($(tl1.east) + (2,0)$) {\textbf{\textit{Red}} \textbf{\textit{Phase:}} This phase indicates that vehicles are required to come to a complete stop and must not go beyond the stop line or enter the intersection. Red light means that the drivers at the opposing directions is ready to proceed when the light turns green.};
+
+		\matrix[trafficlight, below=of tl1,
+			row 1/.style={nodes={fill=black!70}},
+			row 2/.style={nodes={fill=yellow}},
+			row 3/.style={nodes={fill=black!70}}] (tl2) {
+			\\
+			\\
+			\\
+		};
+		\node[right,text width=12cm] at ($(tl2.east) + (2,0)$) {\textbf{\textit{Yellow}} \textbf{\textit{Phase:}}
+			This phase is a transition between green and red phases. It warns drivers that the signal is about to change and indicates that they should prepare to stop. };
+
+		\matrix[trafficlight, below=of tl2,
+			row 1/.style={nodes={fill=black!70}},
+			row 2/.style={nodes={fill=black!70}},
+			row 3/.style={nodes={fill=green}}] (tl3) {
+			\\
+			\\
+			\\
+		};
+		\node[right] at ($(tl3.east) + (2,0)$) {\textbf{\textit{Green}} \textbf{\textit{Phase:}} Allow to proceed the intersection.};
+	\end{tikzpicture}
+	\caption{Behavior of Traffic Light: Light Sequence Changes}
+	\label{light:behavior}
+\end{figure}
+The main function of traffic lights is to regulate the movement of vehicles at intersections. The \acs{tlcs} will control each direction of traffic light to ensure that only one direction of traffic receives the right-of-way to proceed through the intersection. The \acs{tlcs} is designed to handle a variety of conditions that may arise at different time intervals such as morning, peak hours, and night. Hence, the \acs{tlcs} is equipped with adaptive control mechanisms that utilize the sensor to monitor traffic conditions in real-time, such as normal operation, low car density detection and underused road detection, in order to dynamic adjustments to signal timings and priorities.
+
+

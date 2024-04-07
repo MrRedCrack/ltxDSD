@@ -104,14 +104,14 @@
 		\begin{table}[ht]
 			\setlength\tabcolsep{.5cm}
 			\centering
-			\begin{NiceTabular}[t]{llcl}[code-before = \rowcolor{white}{1} \rowcolors{2}{gray!12.5}{white}]
+			\begin{NiceTabular}[t]{llc>{\raggedright\arraybackslash}p{5cm}}[]%code-before = \rowcolor{white}{1} \rowcolors{2}{gray!12.5}{white}
 				\toprule
-				No.         & \multicolumn{1}{c}{Name} & ID      & \multicolumn{1}{c}{Task} \\
+				No.         & \multicolumn{1}{c}{Name} & ID      & \multicolumn{1}{c}{Task}                                                                                               \\
 				\midrule
-				\showcntA{} & Chan Jian Hong           & 2104743 &                          \\
-				\showcntA{} & Erin Tong Lih Xian       & 2206674 &                          \\
-				\showcntA{} & Tam Kai Yuan             & 2103376 &                          \\
-				\showcntA{} & Vanicha Kulma            & 2105652 &                          \\
+				\showcntA{} & Chan Jian Hong           & 2104743 & Specifications writing and typesetting, including all block diagrams                                                   \\
+				\showcntA{} & Erin Tong Lih Xian       & 2206674 & Testbench verification planning and development                                                                        \\
+				\showcntA{} & Tam Kai Yuan             & 2103376 & System behavior planning, design and implementation, discussion and conclusion writing, and general report typesetting \\
+				\showcntA{} & Vanicha Kulma            & 2105652 & General introduction writing, simulation results analysis and explanation                                              \\
 				\bottomrule
 			\end{NiceTabular}
 		\end{table}
@@ -155,7 +155,7 @@
 \phantomsection{}
 \addcontentsline{toc}{section}{LIST OF ABBREVIATIONS}
 \section*{LIST OF ABBREVIATIONS}
-\begin{acronym}[TLCS]\itemsep0pt
+\begin{acronym}[FPGA]\itemsep0pt
 	\acro{fpga}[FPGA]{field-programmable gate array}
 	\acro{fsm}[FSM]{finite state machine}
 	\acro{hdl}[HDL]{hardware description language}
@@ -176,6 +176,7 @@
 \subfile{subfile/2systemDesign.tex}
 \clearpage
 \subfile{subfile/3specs.tex}
+\subfile{subfile/3sourcecode.tex}
 \clearpage
 \subfile{subfile/4verification.tex}
 \clearpage
@@ -195,11 +196,11 @@
 \fancyhead[L]{\footnotesize\textsl{\nouppercase\leftmark}}
 \begin{flushleft}
 	\phantomsection{}
-	\addcontentsline{toc}{section}{REFERENCES}
+	\addcontentsline{toc}{section}{REFERENCE}
 	\singlespacing{}
 	\setlength{\bibitemsep}{\baselineskip}
 	\titleformat{\section}{\normalfont\Large\bfseries\centering}{\thesection}{1em}{}
-	\renewcommand{\refname}{REFERENCES}
+	\renewcommand{\refname}{REFERENCE}
 	\printbibliography{}
 \end{flushleft}
 

@@ -1,1 +1,53 @@
 \section{Simulation Results}
+\subsection{The Strategic Use of `\$monitor' in System Verilog Simulations }
+\begin{figure}[H]
+	\centering
+	\fbox{\includegraphics[width=.6\textwidth]{monitor.png}}
+	\caption{Use of \$monitor function in testbench.\label{fig:monitor}}
+\end{figure}
+\begin{itemize}
+	\item Complexity and Dynamic Nature of Traffic Light Systems:
+
+	      Traffic light systems, characterized by their need to respond to variable traffic conditions, exemplify complex and dynamic systems. The impractically of covering all possible scenarios with pre-defined test vectors make `\$monitor' an attractive alternative, offering real-time tracking of system variables and responses to changing input.
+	\item Limitation of Test Vectors:
+
+	      Test vectors, while essential for validating specific states and responses, fall short in dynamic scenarios where input conditions cannot be exhaustively predefined. Their static nature restricts the ability to adapt to and explore the vast space of potential real-world conditions.
+\end{itemize}
+Advantages of Using `\$monitor':
+\begin{itemize}
+	\item \textbf{Real-Time Insights:} `\$monitor' provide instantaneous feedback on the internal states and output of the system, enabling developers to observe the immediate effects of input changes. This continuous feedback loop is important for identifying and resolving unexpected behaviours swiftly.
+	\item \textbf{Efficiency in Debugging:} By offering ongoing visibility into the system's operation, `\$monitor' facilitates a more efficient debugging process. Developers can pinpoint the exact moment and condition under which an anomaly occurs, streamlining the troubleshooting process.
+	\item \textbf{Flexibility:} `\$monitor' offers greater flexibility in testing, empowering developers to adjust inputs in real-time and observe immediate outcomes. This versatility proves particularly valuable during initial development phases, where system behaviour and specification might still be evolving.
+\end{itemize}
+\subsection{Behavior Plan and Actual Output}
+\begin{figure}[H]
+	\centering
+	\fbox{\includegraphics[width=.98\textwidth]{tb1.png}}
+	\caption{Real output for the test case.\label{fig:tb1}}
+\end{figure}
+\begin{figure}[H]
+	\centering
+	\fbox{\includegraphics[width=.98\textwidth]{tb2.png}}
+	\caption{Real output for the test case.\label{fig:tb2}}
+\end{figure}
+\begin{table}[ht]
+	\centering
+	\renewcommand\arraystretch{2}
+	\caption{Testbench Results.\label{tab:result}}
+	\begin{NiceTabular}[t]{cX[l,t]X[l,t]c}
+		\toprule
+		\makecell{Test                                                                                     \\Condition} & \multicolumn{1}{c}{Expected Behavior} & \multicolumn{1}{c}{Actual Output} & Result\\
+		\midrule
+		1 & Roads A and C always detect cars, cycling     & Same as expected                        & Pass \\
+		2 & Roads B and D always detect cars, cycling     & Same as expected                        & Pass \\
+		3 & All roads continuously detect cars, cycling   & Same as expected                        & Pass \\
+		4 & Roads A and B detect cars alternately         & Same as expected                        & Pass \\
+		5 & Road B stops detecting cars after 5s          & Green light shifts from B to C after 5s & Pass \\
+		6 & Road C stops detecting cars after 5s          & Green light shifts from C to D after 5s & Pass \\
+		7 & Roads A, C, and D always detect cars, cycling & Same as expected                        & Pass \\
+		8 & No cars detected, green light stays at road D & Same as expected                        & Pass \\
+
+		\bottomrule
+	\end{NiceTabular}
+\end{table}
+
