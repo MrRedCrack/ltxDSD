@@ -36,19 +36,24 @@ However, the $G$ state is possible to be held at the same state by the 2-bit var
 	\setlength{\cmidrulekern}{.4em}
 	\centering
 	\caption{Lights \acs{fsm} State Table.\label{tab:lights_st}}
-	\begin{NiceTabular}[t]{W{c}{2cm}cccW{c}{2cm}}
-		\toprule
-		\Block{2-1}{\makecell{Present                                                                                                                                                                                                  \\State}} & \multicolumn{3}{c}{Next State} & \Block{2-1}{\makecell{Output\\\texttt{tl\_signal}}}                       \\
-		\cmidrule(rl){2-4}
-		     & \footnotesize\texttt{default} & \footnotesize\texttt{p\_timeout}                                                                                        & \footnotesize\ttfamily\makecell{(p\_timeout ||                \\(s\_timeout \&\&\\!sensor[index])) \&\& \\inc\_offset <= 2} &   \\
-		%\cmidrule(r){1-1}\cmidrule(rl){2-2}\cmidrule(rl){3-3}\cmidrule(rl){4-4}\cmidrule(l){5-5}
-		\cmidrule(lr){1-1}\cmidrule(lr){2-4}\cmidrule(lr){5-5}
-		INIT & $G$                           & ---\tabularnote[*]{\footnotesize{`---' indicates the particular condition check does not exist for the present state.}} & ---                                            & \texttt{000} \\
-		$G$  & $G$                           & ---                                                                                                                     & $Y$                                            & \texttt{001} \\
-		$Y$  & $Y$                           & $R$                                                                                                                     & ---                                            & \texttt{010} \\
-		$R$  & $R$                           & $G$                                                                                                                     & ---                                            & \texttt{100} \\
-		\bottomrule
-	\end{NiceTabular}
+	\begin{threeparttable}
+		\begin{tabular}[t]{W{c}{2cm}cccW{c}{2cm}}
+			\toprule
+			\multirow{2}{*}[-1em]{\makecell{Present                                                                                                 \\State}} & \multicolumn{3}{c}{Next State} & \multirow{2}{*}[-1em]{\makecell{Output\\\texttt{tl\_signal}}}                       \\
+			\cmidrule(rl){2-4}
+			     & \footnotesize\texttt{default} & \footnotesize\texttt{p\_timeout} & \footnotesize\ttfamily\makecell{(p\_timeout ||                \\(s\_timeout \&\&\\!sensor[index])) \&\& \\inc\_offset <= 2} &   \\
+			%\cmidrule(r){1-1}\cmidrule(rl){2-2}\cmidrule(rl){3-3}\cmidrule(rl){4-4}\cmidrule(l){5-5}
+			\cmidrule(lr){1-1}\cmidrule(lr){2-4}\cmidrule(lr){5-5}
+			INIT & $G$                           & ---\tnote{*}                     & ---                                            & \texttt{000} \\
+			$G$  & $G$                           & ---                              & $Y$                                            & \texttt{001} \\
+			$Y$  & $Y$                           & $R$                              & ---                                            & \texttt{010} \\
+			$R$  & $R$                           & $G$                              & ---                                            & \texttt{100} \\
+			\bottomrule
+		\end{tabular}
+		\begin{tablenotes}\footnotesize
+			\item[*] `---' indicates the particular condition check does not exist for the present state.
+		\end{tablenotes}
+	\end{threeparttable}
 \end{table}
 \begin{table}[H]
 	\renewcommand{\arraystretch}{1.5}
@@ -56,21 +61,26 @@ However, the $G$ state is possible to be held at the same state by the 2-bit var
 	\setlength{\cmidrulekern}{.4em}
 	\centering
 	\caption{Lights \acs{fsm} State Assigned Table.\label{tab:lights_sat}}
-	\begin{NiceTabular}[t]{W{c}{2.3cm}cccW{c}{2cm}}
-		\toprule
-		\Block{2-1}{\makecell{Present                                                                                                                                                                                                                                                          \\State}} & \multicolumn{3}{c}{Next State} & \Block{2-1}{\makecell{Output}}                       \\
-		\cmidrule(rl){2-4}
-		                                     & \footnotesize\texttt{default}     & \footnotesize\texttt{p\_timeout}                                                                                        & \footnotesize\ttfamily\makecell{(p\_timeout ||                                    \\(s\_timeout \&\&\\!sensor[index])) \&\& \\inc\_offset <= 2} &   \\
-		%\cmidrule(r){1-1}\cmidrule(rl){2-2}\cmidrule(rl){3-3}\cmidrule(rl){4-4}\cmidrule(l){5-5}
-		\cmidrule(lr){1-1}\cmidrule(lr){2-4}\cmidrule(lr){5-5}
-		\footnotesize\texttt{current\_state} & \footnotesize\texttt{next\_state} & \footnotesize\texttt{next\_state}                                                                                       & \footnotesize\texttt{next\_state}              & \footnotesize\texttt{tl\_signal} \\
-		\cmidrule(lr){1-1}\cmidrule(lr){2-4}\cmidrule(lr){5-5}
-		\texttt{00}                          & \texttt{01}                       & ---\tabularnote[*]{\footnotesize{`---' indicates the particular condition check does not exist for the present state.}} & ---                                            & \texttt{000}                     \\
-		\texttt{01}                          & \texttt{01}                       & ---                                                                                                                     & \texttt{10}                                    & \texttt{001}                     \\
-		\texttt{10}                          & \texttt{10}                       & \texttt{11}                                                                                                             & ---                                            & \texttt{010}                     \\
-		\texttt{11}                          & \texttt{11}                       & \texttt{01}                                                                                                             & ---                                            & \texttt{100}                     \\
-		\bottomrule
-	\end{NiceTabular}
+	\begin{threeparttable}
+		\begin{tabular}[t]{W{c}{2.3cm}cccW{c}{2cm}}
+			\toprule
+			\multirow{2}{*}[-1em]{\makecell{Present                                                                                                                                                          \\State}} & \multicolumn{3}{c}{Next State} & \multirow{2}{*}[-1em]{\makecell{Output}}                       \\
+			\cmidrule(rl){2-4}
+			                                     & \footnotesize\texttt{default}     & \footnotesize\texttt{p\_timeout}  & \footnotesize\ttfamily\makecell{(p\_timeout ||                                    \\(s\_timeout \&\&\\!sensor[index])) \&\& \\inc\_offset <= 2} &   \\
+			%\cmidrule(r){1-1}\cmidrule(rl){2-2}\cmidrule(rl){3-3}\cmidrule(rl){4-4}\cmidrule(l){5-5}
+			\cmidrule(lr){1-1}\cmidrule(lr){2-4}\cmidrule(lr){5-5}
+			\footnotesize\texttt{current\_state} & \footnotesize\texttt{next\_state} & \footnotesize\texttt{next\_state} & \footnotesize\texttt{next\_state}              & \footnotesize\texttt{tl\_signal} \\
+			\cmidrule(lr){1-1}\cmidrule(lr){2-4}\cmidrule(lr){5-5}
+			\texttt{00}                          & \texttt{01}                       & ---\tnote{*}                      & ---                                            & \texttt{000}                     \\
+			\texttt{01}                          & \texttt{01}                       & ---                               & \texttt{10}                                    & \texttt{001}                     \\
+			\texttt{10}                          & \texttt{10}                       & \texttt{11}                       & ---                                            & \texttt{010}                     \\
+			\texttt{11}                          & \texttt{11}                       & \texttt{01}                       & ---                                            & \texttt{100}                     \\
+			\bottomrule
+		\end{tabular}
+		\begin{tablenotes}\footnotesize
+			\item[*] `---' indicates the particular condition check does not exist for the present state.
+		\end{tablenotes}
+	\end{threeparttable}
 \end{table}
 \subsection{Index \acs{fsm}}
 \begin{figure}[H]
@@ -93,13 +103,34 @@ However, the $G$ state is possible to be held at the same state by the 2-bit var
 		edge [out=-30,in=-60,loop] node [font=\footnotesize\ttfamily,align=center] {default} ()
 		(D) edge [bend left] node [font=\footnotesize\ttfamily,align=center] {index\_inc \&\&\\inc\_offset = 0} (A)
 		edge [out=-120,in=-150,loop] node [font=\footnotesize\ttfamily,align=center] {default} ();
+
+		\path[->] (B) edge [bend left,dotted] (A)
+		(C) edge [bend left,dotted] (B)
+		(D) edge [bend left,dotted] (C)
+		(A) edge [bend left,dotted] (D);
+
+		\path[->] (B) edge [bend left,dotted] (A)
+		(C) edge [bend left,dotted] (B)
+		(D) edge [bend left,dotted] (C)
+		(A) edge [bend left,dotted] (D);
+
+		\path[->] (B) edge [bend left,dashed] (D)
+		(C) edge [bend left,dashed] (A)
+		(D) edge [bend left,dashed] (B)
+		(A) edge [bend left,dashed] (C);
+
+		\tikzset{every outer matrix/.append style={outer sep=10pt}}
+		\matrix [draw,anchor=west] at (current bounding box.east) {
+			\node [label={[align=left,font=\footnotesize\ttfamily]right:index\_inc \&\&\\inc\_offset = 1}] {\tikz \draw[->,dashed] (0pt,0pt) -- (1.5em,0pt);}; \\
+			\node [label={[align=left,font=\footnotesize\ttfamily]right:index\_inc \&\&\\inc\_offset = 2}] {\tikz \draw[->,dotted] (0pt,0pt) -- (1.5em,0pt);}; \\
+		};
 	\end{tikzpicture}
-	\caption{Index \acs{fsm} (Simplified by omitting index skip transitions).\label{fig:index_fsm}}
+	\caption{Index \acs{fsm}.\label{fig:index_fsm}}
 	\par
 \end{figure}
 The Index \ac{fsm} (Figure~\ref{fig:index_fsm}) outputs the 2-bit variable \texttt{index} to keep track of the one traffic light in focus out of four possible options $A$, $B$, $C$, $D$, each corresponding to a different road at the cross intersection. Only the traffic light pointed by \texttt{index} at any given time will reflect the state of the Lights \ac{fsm}, while all other traffic lights are to be set to red light by an interpreter logic block.
 
-When no road is detected as underused, the index shall be incremented one by one whenever the boolean flag \texttt{index\_inc} is set, which happens during each transition from $R$ to $G$ state of the Lights \ac{fsm}, so as the all-red phase ends, the green light is switched to the subsequent road index. For the sake of avoiding visual clutter, Figure~\ref{fig:index_fsm} omits the depiction of additional possible state skip transitions caused by different possible index increment offset values (\texttt{inc\_offset}) introduced by the underused road detection feature. The variable \texttt{inc\_offset} signals how many underused roads to skip over, starting from the current index. Its value (number of skippable roads) can be \texttt{0} to \texttt{3}. As shown in the state table and state transition table (Table~\ref{tab:index_st} and~\ref{tab:index_sat}), for transitions where \texttt{inc\_offset} has a non-zero value, the index may skip forward two to three counts from present state, or even remain at the same state.
+When no road is detected as underused, the index shall be incremented one by one whenever the boolean flag \texttt{index\_inc} is set, which happens during each transition from $R$ to $G$ state of the Lights \ac{fsm}, so as the all-red phase ends, the green light is switched to the subsequent road index. The variable \texttt{inc\_offset} signals how many underused roads to skip over, starting from the current index. Its value (number of skippable roads) can be \texttt{0} to \texttt{3}. For transitions where \texttt{inc\_offset} has a non-zero value, the index may skip forward two to three counts from present state, or even remain at the same state.
 \begin{table}[H]
 	\renewcommand{\arraystretch}{1.5}
 	\setlength{\tabcolsep}{6pt}
@@ -145,30 +176,36 @@ When no road is detected as underused, the index shall be incremented one by one
 \subsection{Counter \acs{fsm}}
 The Counter \ac{fsm} module is instantiated once for Primary Counter \ac{fsm}, once for Secondary Counter \ac{fsm}, and an additional four times by Underused Road Detector \ac{fsm} for parallel time monitoring purposes. Each instantiation has their \ac{io} hooked to different signal configurations in order to carry out their unique tasks.
 
-The Counter \ac{fsm} holds a 16-bit value with the variable \texttt{current\_count} to be counted down on every clock cycle until it reaches `0'. On \ac{tlcs} reset, the \texttt{current\_count} is initialized at `0'. Due to the huge number of possible \ac{fsm} states derived from 16 bits of \texttt{current\_count}, after trial and error it was determined the state machine transitions could only be illustrated on paper using its state assigned table with an alias $y$ to group a large number of unique states with similar meanings (Table~\ref{tab:pcounter_sat}).
+The Counter \ac{fsm} holds a 16-bit value with the variable \texttt{current\_count} to be decremented on every clock pulse until it reaches `0'. Only at \texttt{current\_count = 0} its output boolean flag \texttt{flag\_0} will be `1'. On reset, the \texttt{current\_count} is initialized at `0'. Due to the huge number of possible \ac{fsm} states derived from 16 bits of \texttt{current\_count}, after trial and error it was determined the state machine transitions could only be illustrated on paper using its state assigned table with an alias $y$ to group a large number of unique states with similar meanings (Table~\ref{tab:pcounter_sat}).
 
-As shown in the table, the Counter \ac{fsm} is reloaded by receiving a boolean \texttt{counter\_set} signal along with its \texttt{load} value as a starting point for the countdown. The output timeout boolean flag \texttt{flag\_0} will only become `1' when \texttt{current\_count} is `0'.
+As shown in the table, the Counter \ac{fsm} is reloaded by receiving a boolean \texttt{counter\_set} signal along with its 16-bit \texttt{load} value as a starting point for the countdown. The output timeout boolean flag \texttt{flag\_0} will only become `1' when \texttt{current\_count} is `0'.
 \begin{table}[H]
 	\renewcommand{\arraystretch}{1.5}
 	\setlength{\tabcolsep}{6pt}
 	\setlength{\cmidrulekern}{.4em}
 	\centering
 	\caption{Counter \acs{fsm} State Assigned Table.\label{tab:pcounter_sat}}
-	\begin{NiceTabular}[t]{W{c}{2.8cm}cccW{c}{2cm}}
-		\toprule
-		\Block{2-1}{\makecell{Present                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        \\State}} & \multicolumn{3}{c}{Next State} & \Block{2-1}{\makecell{Output}}                       \\
-		\cmidrule(rl){2-4}
-		                                                                                                                   & \footnotesize\ttfamily\makecell{
-		!counter\_set \&\&                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   \\																	|current\_count                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         }                                                                                                                                                                                                                                                                                              & \footnotesize\ttfamily\makecell{!counter\_set \&\&\\\sim|current\_count}                                                                                         & \footnotesize\texttt{counter\_set}                                                                             \\
-		%\cmidrule(r){1-1}\cmidrule(rl){2-2}\cmidrule(rl){3-3}\cmidrule(rl){4-4}\cmidrule(l){5-5}
-		\cmidrule(lr){1-1}\cmidrule(lr){2-4}\cmidrule(lr){5-5}
-		$\scriptstyle \text{\footnotesize\texttt{current\_count}}_{\text{n}-1}$                                            & $\scriptstyle \text{\footnotesize\texttt{current\_count}}_{\text{n}}$                                                                                                                                                                                                                                                            & $\scriptstyle \text{\footnotesize\texttt{current\_count}}_{\text{n}}$                                                                       & $\scriptstyle \text{\footnotesize\texttt{current\_count}}_{\text{n}}$ & $\scriptstyle \text{\texttt{flag\_0}}$ \\
-		\cmidrule(lr){1-1}\cmidrule(lr){2-4}\cmidrule(lr){5-5}
-		\footnotesize\texttt{load}                                                                                         & \footnotesize\ttfamily\makecell{load - 1                                                                                                                                                                                                                                                                                       } & $\times$\tabularnote[*]{\footnotesize{`$\times$' indicates the condition is logically impossible for the present state and so is ignored.}} & \footnotesize\texttt{load}                                            & \texttt{0}                             \\
-		$y$\tabularnote{\footnotesize{$y$ is an alias for any non-zero value that isn't the initial \texttt{load} value.}} & $y-1$                                                                                                                                                                                                                                                                                                                            & $\times$                                                                                                                                    & \footnotesize\texttt{load}                                            & \texttt{0}                             \\
-		\texttt{0}                                                                                                         & $\times$                                                                                                                                                                                                                                                                                                                         & \texttt{0}                                                                                                                                  & \footnotesize\texttt{load}                                            & \texttt{1}                             \\
-		\bottomrule
-	\end{NiceTabular}
+	\begin{threeparttable}
+		\begin{tabular}[t]{W{c}{2.8cm}cccW{c}{2cm}}
+			\toprule
+			\multirow{2}{*}[-.5em]{\makecell{Present                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            \\State}} & \multicolumn{3}{c}{Next State} & \multirow{2}{*}[-.5em]{\makecell{Output}}                       \\
+			\cmidrule(rl){2-4}
+			                                                                        & \footnotesize\ttfamily\makecell{
+			!counter\_set \&\&                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  \\																	|current\_count                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         }                                                                                                                                                                                                                                                                                              & \footnotesize\ttfamily\makecell{!counter\_set \&\&\\\sim|current\_count}                                                                                         & \footnotesize\texttt{counter\_set}                                                                             \\
+			%\cmidrule(r){1-1}\cmidrule(rl){2-2}\cmidrule(rl){3-3}\cmidrule(rl){4-4}\cmidrule(l){5-5}
+			\cmidrule(lr){1-1}\cmidrule(lr){2-4}\cmidrule(lr){5-5}
+			$\scriptstyle \text{\footnotesize\texttt{current\_count}}_{\text{n}-1}$ & $\scriptstyle \text{\footnotesize\texttt{current\_count}}_{\text{n}}$                                                                                                                                                                                                                                                            & $\scriptstyle \text{\footnotesize\texttt{current\_count}}_{\text{n}}$ & $\scriptstyle \text{\footnotesize\texttt{current\_count}}_{\text{n}}$ & $\scriptstyle \text{\texttt{flag\_0}}$ \\
+			\cmidrule(lr){1-1}\cmidrule(lr){2-4}\cmidrule(lr){5-5}
+			\footnotesize\texttt{load}                                              & \footnotesize\ttfamily\makecell{load - 1                                                                                                                                                                                                                                                                                       } & $\times$\tnote{*}                                                     & \footnotesize\texttt{load}                                            & \texttt{0}                             \\
+			$y$\tnote{**}                                                           & $y-1$                                                                                                                                                                                                                                                                                                                            & $\times$                                                              & \footnotesize\texttt{load}                                            & \texttt{0}                             \\
+			\texttt{0}                                                              & $\times$                                                                                                                                                                                                                                                                                                                         & \texttt{0}                                                            & \footnotesize\texttt{load}                                            & \texttt{1}                             \\
+			\bottomrule
+		\end{tabular}
+		\begin{tablenotes}\footnotesize
+			\item[*] `$\times$' indicates the condition is logically impossible for the present state and so is ignored.
+			\item[**] $y$ is an alias for any non-zero value that isn't the initial \texttt{load} value.
+		\end{tablenotes}
+	\end{threeparttable}
 \end{table}
 \subsubsection{Primary Counter \acs{fsm}}
 The Primary Counter \ac{fsm} is a straightforward counter for counting down from the set primary timeout duration of a Light state without intervention from any special condition. Its output \texttt{flag\_0} is directly hooked to the \texttt{p\_timeout} condition signal for the Lights \ac{fsm}. Each Light state duration shall not ever exceed that which is set at this counter, unless the number of dynamically closed roads leaves one or less remaining road active.

@@ -8,6 +8,8 @@
 \onehalfspacing{}
 \usepackage{graphicx}
 \usepackage{nicematrix} % table coloring (NiceTabular)
+\usepackage{threeparttable}
+\usepackage{multirow}
 \usepackage{enumitem} % footnotes with NiceTabular
 \graphicspath{ {./fig/} }
 \usepackage{titlesec} % \titleformat and \titlespacing
@@ -64,7 +66,7 @@
 	baselinestretch=1.2,
 	fontsize=\normalsize}
 \usemintedstyle{bw}
-\usepackage[labelfont=bf,position=bottom,justification=centering]{caption} % Set caption options
+\usepackage[labelfont=bf,position=auto,justification=centering]{caption} % Set caption options
 \newenvironment{code}{\captionsetup{type=listing,skip=\abovecaptionskip}}{}
 \SetupFloatingEnvironment{listing}{name=Source Code,fileext=lol}
 \renewcommand\theFancyVerbLine{\footnotesize\arabic{FancyVerbLine}} % code line number formatting
